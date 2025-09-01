@@ -18,7 +18,7 @@ public class Card {
 
     @Id
     @Column(nullable = false)
-    private String cardNumber;
+    private String number;
 
     @ManyToOne
     @JoinColumn(name = "user_email", nullable = false)
