@@ -39,4 +39,19 @@ public class Card {
 
     @Column(nullable = false)
     private Boolean requestToBlocked;
+
+    public Card(
+            String number,
+            User user,
+            String fullNameUser,
+            LocalDate expirationDate,
+            CardStatus status,
+            BigDecimal balance) {
+        this.number = number;
+        this.user = user;
+        this.fullNameUser = fullNameUser;
+        this.expirationDate = expirationDate;
+        this.status = status;
+        this.balance = balance;
+    }
 }
