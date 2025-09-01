@@ -17,3 +17,14 @@ spring:
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
+  #settings of liquibase
+  liquibase:
+    change-log: classpath:/db/migration/db.changelog-master.yaml
+    enabled: true
+    liquibase-schema: bankcards
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG

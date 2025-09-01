@@ -1,0 +1,4 @@
+databaseChangeLog:
+  - include:
+      file: 20250901_init_schema.xml
+      relativeToChangelogFile: true
