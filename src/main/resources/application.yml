@@ -22,6 +22,16 @@ spring:
     change-log: classpath:/db/migration/db.changelog-master.yaml
     enabled: true
     liquibase-schema: bankcards
+  #settings of hibernate
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    open-in-view: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
 
 logging:
   level:
