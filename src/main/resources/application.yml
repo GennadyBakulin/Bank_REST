@@ -6,3 +6,14 @@
 #  - Указать порт приложения.
 #  - Настроить параметры безопасности и JWT.
 #  - Включить Swagger UI.
+
+server:
+  port: 8080
+
+spring:
+  #settings of postgres
+  datasource:
+    url: jdbc:postgresql://localhost:5432/bankcards
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
