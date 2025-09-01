@@ -13,6 +13,7 @@ import com.example.bankcards.repository.CardRepository;
 import com.example.bankcards.repository.UserRepository;
 import com.example.bankcards.service.CardService;
 import com.example.bankcards.util.CardUtils;
+import com.example.bankcards.util.UserUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -39,7 +40,7 @@ public class CardServiceImpl implements CardService {
         Card card = new Card(
                 request.getNumber(),
                 user,
-                CardUtils.getFullName(user),
+                UserUtils.getFullName(user),
                 LocalDate.now().plusMonths(request.getCountMonth()),
                 CardStatus.ACTIVE,
                 request.getAmount()
