@@ -1,24 +1,22 @@
 package com.example.bankcards.service;
 
+import com.example.bankcards.dto.page.PageDtoResponse;
 import com.example.bankcards.dto.user.UserDtoResponse;
-import org.springframework.security.core.userdetails.UserDetailsService;
-
-import java.util.List;
 
 public interface UserService {
 
     /**
-     * Находит пользователя по email
+     * Администратор получает пользователя по email
      */
     UserDtoResponse getUserByEmail(String email);
 
     /**
-     * Получает всех пользователей без пагинации!!!
+     * Администратор получает всех пользователей с пагинацией
      */
-    List<UserDtoResponse> getAllUsers();
+    PageDtoResponse<UserDtoResponse> getAllUsers(int pageNumber, int pageSize);
 
     /**
-     * Удаляет пользователя по email
+     * Администратор удаляет пользователя по email
      */
-    void deleteUserByEmail(String email);
+    void deleteByEmail(String email);
 }

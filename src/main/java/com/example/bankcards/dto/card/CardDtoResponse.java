@@ -1,6 +1,7 @@
 package com.example.bankcards.dto.card;
 
 import com.example.bankcards.entity.card.CardStatus;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
@@ -17,7 +18,7 @@ public class CardDtoResponse {
 
     private String fullNameUser;
 
-    private LocalDate validityDate;
+    private LocalDate expirationDate;
 
     private CardStatus status;
 

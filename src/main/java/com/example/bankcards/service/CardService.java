@@ -3,9 +3,7 @@ package com.example.bankcards.service;
 import com.example.bankcards.dto.card.CardDtoRequest;
 import com.example.bankcards.dto.card.CardDtoResponse;
 import com.example.bankcards.dto.card.TotalBalanceDtoResponse;
-
-import java.math.BigDecimal;
-import java.util.List;
+import com.example.bankcards.dto.page.PageDtoResponse;
 
 public interface CardService {
 
@@ -15,39 +13,39 @@ public interface CardService {
     CardDtoResponse create(CardDtoRequest request);
 
     /**
-     * Блокирует карту
+     * Администратор блокирует карту по номеру
      */
-    void blockCard(String cardNumber);
+    void blocked(String cardNumber);
 
     /**
-     * Администратор активирует карту
+     * Администратор активирует карту по номеру
      */
-    void activateCard(String cardNumber);
+    void activation(String cardNumber);
 
     /**
      * Администратор удаляет карту по номеру
      */
-    void deleteCard(String cardNumber);
+    void delete(String cardNumber);
 
     /**
-     * Администратор находит все карты без пагинациии!!!
+     * Администратор находит все карты с пагинацией
      */
-    List<CardDtoResponse> getAllCards();
+    PageDtoResponse<CardDtoResponse> getAll(int pageNumber, int pageSize);
 
     /**
-     * Находит все карты пользователя без пагинациии!!!
+     * Пользователь получает все свои карты с пагинацией
      */
-    List<CardDtoResponse> getAllCardsUser();
+    PageDtoResponse<CardDtoResponse> getAllByUser(int pageNumber, int pageSize);
 
     /**
-     * Пользователь просматривает свои карты без пагинациии!!!
+     * Пользователь получает карту по её номеру
      */
-    CardDtoResponse getCardByNumber(String cardNumber);
+    CardDtoResponse getByNumber(String cardNumber);
 
     /**
      * Пользователь отправляет запрос на блокировку карты
      */
-    void requestToBlockedCard(String cardNumber);
+    void requestToBlocked(String cardNumber);
 
     /**
      * Пользователь получает общий баланс со всех своих карт

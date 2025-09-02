@@ -1,5 +1,6 @@
 package com.example.bankcards.service.impl;
 
+import com.example.bankcards.dto.page.PageDtoResponse;
 import com.example.bankcards.dto.transfer.TransferDtoRequest;
 import com.example.bankcards.dto.transfer.TransferDtoResponse;
 import com.example.bankcards.entity.card.Card;
@@ -14,11 +15,15 @@ import com.example.bankcards.repository.TransferRepository;
 import com.example.bankcards.repository.UserRepository;
 import com.example.bankcards.service.TransferService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +34,7 @@ public class TransferServiceImpl implements TransferService {
     private final UserRepository userRepository;
 
     @Override
+    @Transactional
     public TransferDtoResponse transferBetweenCardsOneUser(TransferDtoRequest request) {
         Card fromCard = findCardByNumber(request.getFromCardNumber());
         Card toCard = findCardByNumber(request.getToCardNumber());
@@ -38,7 +44,9 @@ public class TransferServiceImpl implements TransferService {
         }
 
         UserDetails principal = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        User user = userRepository.findByEmail(principal.getUsername()).orElseThrow(() -> new UserNotFoundException("User not found"));
+        User user = userRepository
+                .findByEmail(principal.getUsername())
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         if (!user.equals(fromCard.getUser()) || !user.equals(toCard.getUser())) {
             throw new InvalidTransactionRequest("One or both of the cards do not belong to the user");
@@ -49,7 +57,8 @@ public class TransferServiceImpl implements TransferService {
         }
 
         if (fromCard.getBalance().compareTo(request.getAmount()) < 0) {
-            throw new InvalidTransactionRequest("There are not enough funds on the card from which the transfer is being made");
+            throw new InvalidTransactionRequest("There are not enough funds on the card from " +
+                    "which the transfer is being made");
         }
 
         fromCard.setBalance(fromCard.getBalance().subtract(request.getAmount()));
@@ -66,16 +75,54 @@ public class TransferServiceImpl implements TransferService {
         cardRepository.save(toCard);
         Transfer saveTransfer = transferRepository.save(transfer);
 
-        return TransferDtoResponse.builder()
-                .fromCardNumber(saveTransfer.getFromCardNumber())
-                .toCardNumber(saveTransfer.getToCardNumber())
-                .amount(saveTransfer.getAmount())
-                .time(saveTransfer.getTime())
-                .build();
+        return mapperToDto(saveTransfer);
+    }
+
+    @Override
+    public PageDtoResponse<TransferDtoResponse> getAll(int pageNumber, int pageSize) {
+        Page<Transfer> pageTransfers = transferRepository.findAll(PageRequest.of(pageNumber, pageSize));
+
+        List<TransferDtoResponse> content = pageTransfers.getContent().stream()
+                .map(this::mapperToDto)
+                .toList();
+
+        return new PageDtoResponse<>(
+                content,
+                pageTransfers.getTotalElements(),
+                pageTransfers.getTotalPages(),
+                pageTransfers.getNumber());
+    }
+
+    @Override
+    public PageDtoResponse<TransferDtoResponse> getAllByUser(int pageNumber, int pageSize) {
+        UserDetails principal = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Page<Transfer> pageTransfers = transferRepository
+                .findAllByUser_Email(principal.getUsername(), PageRequest.of(pageNumber, pageSize));
+
+        List<TransferDtoResponse> content = pageTransfers.getContent().stream()
+                .map(this::mapperToDto)
+                .toList();
+
+        return new PageDtoResponse<>(
+                content,
+                pageTransfers.getTotalElements(),
+                pageTransfers.getTotalPages(),
+                pageTransfers.getNumber());
     }
 
     private Card findCardByNumber(String cardNumber) {
         return cardRepository.findByNumber(cardNumber)
                 .orElseThrow(() -> new CardNotFoundException("Card with number= " + cardNumber + " was not found"));
+    }
+
+    private TransferDtoResponse mapperToDto(Transfer transfer) {
+
+        return TransferDtoResponse.builder()
+                .userEmail(transfer.getUser().getEmail())
+                .fromCardNumber(transfer.getFromCardNumber())
+                .toCardNumber(transfer.getToCardNumber())
+                .amount(transfer.getAmount())
+                .time(transfer.getTime())
+                .build();
     }
 }

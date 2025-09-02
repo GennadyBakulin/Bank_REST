@@ -1,6 +1,6 @@
 package com.example.bankcards.service.impl;
 
-import com.example.bankcards.dto.authentification.AuthorizationDtoRequest;
+import com.example.bankcards.dto.authentification.AuthenticationDtoRequest;
 import com.example.bankcards.dto.authentification.JwtDtoResponse;
 import com.example.bankcards.dto.authentification.RegistrationDtoRequest;
 import com.example.bankcards.entity.token.Token;
@@ -62,7 +62,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public JwtDtoResponse authenticate(AuthorizationDtoRequest request) {
+    public JwtDtoResponse authenticate(AuthenticationDtoRequest request) {
         User user = findUserByEmail(request.getEmail());
 
         authenticationManager.authenticate(
@@ -156,6 +156,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private User findUserByEmail(String email) {
         return userRepository
                 .findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User with email= %s not found".formatted(email)));
+                .orElseThrow(() -> new UserNotFoundException("User with email= " + email + " not found"));
     }
 }

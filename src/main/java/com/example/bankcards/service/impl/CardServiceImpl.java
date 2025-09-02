@@ -3,6 +3,7 @@ package com.example.bankcards.service.impl;
 import com.example.bankcards.dto.card.CardDtoRequest;
 import com.example.bankcards.dto.card.CardDtoResponse;
 import com.example.bankcards.dto.card.TotalBalanceDtoResponse;
+import com.example.bankcards.dto.page.PageDtoResponse;
 import com.example.bankcards.entity.card.Card;
 import com.example.bankcards.entity.card.CardStatus;
 import com.example.bankcards.entity.user.User;
@@ -13,6 +14,8 @@ import com.example.bankcards.service.CardService;
 import com.example.bankcards.util.CardUtils;
 import com.example.bankcards.util.UserUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -55,18 +58,19 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
-    public void blockCard(String cardNumber) {
+    public void blocked(String cardNumber) {
         Card card = findCardByNumber(cardNumber);
         card.setStatus(CardStatus.BLOCKED);
         cardRepository.save(card);
     }
 
     @Override
-    public void activateCard(String cardNumber) {
+    public void activation(String cardNumber) {
         Card card = findCardByNumber(cardNumber);
 
         if (checkExpiredCard(card)) {
-            throw new CardExpiredException("Card with number= " + cardNumber + " has status expired and cannot be activated");
+            throw new CardExpiredException("Card with number= " +
+                    cardNumber + " has status expired and cannot be activated");
         }
 
         card.setStatus(CardStatus.ACTIVE);
@@ -74,31 +78,46 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
-    public void deleteCard(String cardNumber) {
+    public void delete(String cardNumber) {
         cardRepository.delete(findCardByNumber(cardNumber));
     }
 
     @Override
     @Transactional
-    public List<CardDtoResponse> getAllCards() {
-        return cardRepository.findAll().stream()
-                .peek(this::checkExpiredCard)
+    public PageDtoResponse<CardDtoResponse> getAll(int pageNumber, int pageSize) {
+        Page<Card> pageCards = cardRepository.findAll(PageRequest.of(pageNumber, pageSize));
+
+        List<CardDtoResponse> content = pageCards.getContent().stream()
                 .map(this::mapperToDto)
                 .toList();
+
+        return new PageDtoResponse<>(
+                content,
+                pageCards.getTotalElements(),
+                pageCards.getTotalPages(),
+                pageCards.getNumber());
     }
 
     @Override
     @Transactional
-    public List<CardDtoResponse> getAllCardsUser() {
+    public PageDtoResponse<CardDtoResponse> getAllByUser(int pageNumber, int pageSize) {
         UserDetails principal = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Page<Card> pageCards = cardRepository
+                .findAllByUser_Email(principal.getUsername(), PageRequest.of(pageNumber, pageSize));
 
-        return getAllCardsByUserEmail(principal.getUsername()).stream()
+        List<CardDtoResponse> content = pageCards.getContent().stream()
                 .map(this::mapperToDto)
                 .toList();
+
+        return new PageDtoResponse<>(
+                content,
+                pageCards.getTotalElements(),
+                pageCards.getTotalPages(),
+                pageCards.getNumber());
     }
 
     @Override
-    public CardDtoResponse getCardByNumber(String cardNumber) {
+    public CardDtoResponse getByNumber(String cardNumber) {
         Card card = findCardByNumber(cardNumber);
         UserDetails principal = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
@@ -109,7 +128,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
-    public void requestToBlockedCard(String cardNumber) {
+    public void requestToBlocked(String cardNumber) {
         Card card = findCardByNumber(cardNumber);
         UserDetails principal = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
@@ -124,7 +143,7 @@ public class CardServiceImpl implements CardService {
     public TotalBalanceDtoResponse getTotalBalanceUser() {
         UserDetails principal = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        BigDecimal totalBalance = getAllCardsByUserEmail(principal.getUsername()).stream()
+        BigDecimal totalBalance = cardRepository.findAllByUser_Email(principal.getUsername()).stream()
                 .filter(card -> card.getStatus() == CardStatus.ACTIVE)
                 .map(Card::getBalance)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -133,12 +152,6 @@ public class CardServiceImpl implements CardService {
                 .email(principal.getUsername())
                 .totalBalance(totalBalance)
                 .build();
-    }
-
-    private List<Card> getAllCardsByUserEmail(String email) {
-        return cardRepository.findAllByUser_Email(email).stream()
-                .peek(this::checkExpiredCard)
-                .toList();
     }
 
     private void checkBelongCardUser(Card card, UserDetails principal) {
@@ -156,7 +169,8 @@ public class CardServiceImpl implements CardService {
     }
 
     private Card findCardByNumber(String cardNumber) {
-        return cardRepository.findByNumber(cardNumber).orElseThrow(() -> new CardNotFoundException("Card not found"));
+        return cardRepository.findByNumber(cardNumber)
+                .orElseThrow(() -> new CardNotFoundException("Card not found"));
     }
 
     private void checkUniqueCardNumber(String cardNumber) {
@@ -168,7 +182,7 @@ public class CardServiceImpl implements CardService {
     private User findUserByEmail(String email) {
         return userRepository
                 .findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User with email= %s not found".formatted(email)));
+                .orElseThrow(() -> new UserNotFoundException("User with email= " + email + " not found"));
     }
 
     private CardDtoResponse mapperToDto(Card card) {
@@ -176,7 +190,7 @@ public class CardServiceImpl implements CardService {
                 .maskedCardNumber(CardUtils.getMaskedCardNumber(card.getNumber()))
                 .email(card.getUser().getEmail())
                 .fullNameUser(card.getFullNameUser())
-                .validityDate(card.getExpirationDate())
+                .expirationDate(card.getExpirationDate())
                 .status(card.getStatus())
                 .balance(card.getBalance())
                 .build();
