@@ -1,18 +1,22 @@
 package com.example.bankcards.service.impl;
 
-import com.example.bankcards.dto.authentification.JwtDtoResponse;
 import com.example.bankcards.dto.authentification.AuthorizationDtoRequest;
+import com.example.bankcards.dto.authentification.JwtDtoResponse;
 import com.example.bankcards.dto.authentification.RegistrationDtoRequest;
 import com.example.bankcards.entity.token.Token;
 import com.example.bankcards.entity.user.Role;
 import com.example.bankcards.entity.user.User;
+import com.example.bankcards.exception.exceptions.PasswordInvalidException;
 import com.example.bankcards.exception.exceptions.UserNotFoundException;
 import com.example.bankcards.repository.TokenRepository;
 import com.example.bankcards.repository.UserRepository;
 import com.example.bankcards.security.JwtServiceImpl;
 import com.example.bankcards.service.AuthenticationService;
+import com.example.bankcards.util.UserUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -40,20 +44,26 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public void register(RegistrationDtoRequest request) {
+        checkUniqueEmail(request.getEmail());
 
-        User user = new User();
+        if (!UserUtils.isValidPassword(request.getPassword())) {
+            throw new PasswordInvalidException("Invalid password");
+        }
 
-        user.setEmail(request.getEmail());
-        user.setName(request.getName());
-        user.setLastName(request.getLastName());
-        user.setRole(Role.USER);
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        User user = new User(
+                request.getEmail(),
+                request.getName(),
+                request.getLastName(),
+                Role.USER,
+                passwordEncoder.encode(request.getPassword())
+        );
 
         userRepository.save(user);
     }
 
     @Override
     public JwtDtoResponse authenticate(AuthorizationDtoRequest request) {
+        User user = findUserByEmail(request.getEmail());
 
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -61,9 +71,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         request.getPassword()
                 )
         );
-
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow();
 
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
@@ -92,8 +99,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String token = authorizationHeader.substring(7);
         String username = jwtService.extractUsername(token);
 
-        User user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new UserNotFoundException("No user found"));
+        User user = findUserByEmail(username);
 
         if (jwtService.isValidRefresh(token, user)) {
 
@@ -139,5 +145,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         token.setUser(user);
 
         tokenRepository.save(token);
+    }
+
+    private void checkUniqueEmail(@NotBlank @Email String email) {
+        if (userRepository.findByEmail(email).isPresent()) {
+            throw new RuntimeException("User with email " + email + " already exists");
+        }
+    }
+
+    private User findUserByEmail(String email) {
+        return userRepository
+                .findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User with email= %s not found".formatted(email)));
     }
 }

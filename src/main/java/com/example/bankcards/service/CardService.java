@@ -2,7 +2,9 @@ package com.example.bankcards.service;
 
 import com.example.bankcards.dto.card.CardDtoRequest;
 import com.example.bankcards.dto.card.CardDtoResponse;
+import com.example.bankcards.dto.card.TotalBalanceDtoResponse;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface CardService {
@@ -35,7 +37,7 @@ public interface CardService {
     /**
      * Находит все карты пользователя без пагинациии!!!
      */
-    List<CardDtoResponse> getAllCardsUser(String email);
+    List<CardDtoResponse> getAllCardsUser();
 
     /**
      * Пользователь просматривает свои карты без пагинациии!!!
@@ -46,4 +48,9 @@ public interface CardService {
      * Пользователь отправляет запрос на блокировку карты
      */
     void requestToBlockedCard(String cardNumber);
+
+    /**
+     * Пользователь получает общий баланс со всех своих карт
+     */
+    TotalBalanceDtoResponse getTotalBalanceUser();
 }

@@ -33,4 +33,19 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> invalidTransactionRequest(InvalidTransactionRequest ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler
+    public ResponseEntity<String> passwordInvalid(PasswordInvalidException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<String> cardExpired(CardExpiredException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<String> userNotOwnerOfCard(UserNotOwnerOfCardException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
 }

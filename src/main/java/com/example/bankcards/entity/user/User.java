@@ -48,6 +48,14 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
     public List<Token> tokens;
 
+    public User(String email, String name, String lastName, Role role, String password) {
+        this.email = email;
+        this.name = name;
+        this.lastName = lastName;
+        this.role = role;
+        this.password = password;
+    }
+
     @Override
     public String getUsername() {
         return email;

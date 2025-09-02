@@ -30,36 +30,30 @@ public class TransferServiceImpl implements TransferService {
 
     @Override
     public TransferDtoResponse transferBetweenCardsOneUser(TransferDtoRequest request) {
-        Card fromCard = cardRepository.findByNumber(request.getFromCardNumber())
-                .orElseThrow(() -> new CardNotFoundException("Карта источник не найдена"));
-
-        Card toCard = cardRepository.findByNumber(request.getToCardNumber())
-                .orElseThrow(() -> new CardNotFoundException("Целевая карта не найдена"));
+        Card fromCard = findCardByNumber(request.getFromCardNumber());
+        Card toCard = findCardByNumber(request.getToCardNumber());
 
         if (request.getFromCardNumber().equals(request.getToCardNumber())) {
-            throw new InvalidTransactionRequest("Нельзя сделать перевод между одной картой");
+            throw new InvalidTransactionRequest("You can't make a transfer between the same card");
         }
 
         UserDetails principal = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findByEmail(principal.getUsername()).orElseThrow(() -> new UserNotFoundException("User not found"));
 
         if (!user.equals(fromCard.getUser()) || !user.equals(toCard.getUser())) {
-            throw new InvalidTransactionRequest("Карты не принадлежат пользователю!");
+            throw new InvalidTransactionRequest("One or both of the cards do not belong to the user");
         }
 
         if (fromCard.getStatus() != CardStatus.ACTIVE || toCard.getStatus() != CardStatus.ACTIVE) {
-            throw new InvalidTransactionRequest("Карты не активны");
+            throw new InvalidTransactionRequest("The cards have no active status");
         }
 
         if (fromCard.getBalance().compareTo(request.getAmount()) < 0) {
-            throw new InvalidTransactionRequest("На карте списания не достаточно средств!");
+            throw new InvalidTransactionRequest("There are not enough funds on the card from which the transfer is being made");
         }
 
         fromCard.setBalance(fromCard.getBalance().subtract(request.getAmount()));
         toCard.setBalance(toCard.getBalance().add(request.getAmount()));
-
-        cardRepository.save(fromCard);
-        cardRepository.save(toCard);
 
         Transfer transfer = new Transfer(
                 user,
@@ -68,13 +62,20 @@ public class TransferServiceImpl implements TransferService {
                 request.getAmount(),
                 LocalDateTime.now());
 
-        Transfer saveTransaction = transferRepository.save(transfer);
+        cardRepository.save(fromCard);
+        cardRepository.save(toCard);
+        Transfer saveTransfer = transferRepository.save(transfer);
 
         return TransferDtoResponse.builder()
-                .fromCardNumber(saveTransaction.getFromCardNumber())
-                .toCardNumber(saveTransaction.getToCardNumber())
-                .amount(saveTransaction.getAmount())
-                .time(saveTransaction.getTime())
+                .fromCardNumber(saveTransfer.getFromCardNumber())
+                .toCardNumber(saveTransfer.getToCardNumber())
+                .amount(saveTransfer.getAmount())
+                .time(saveTransfer.getTime())
                 .build();
+    }
+
+    private Card findCardByNumber(String cardNumber) {
+        return cardRepository.findByNumber(cardNumber)
+                .orElseThrow(() -> new CardNotFoundException("Card with number= " + cardNumber + " was not found"));
     }
 }
