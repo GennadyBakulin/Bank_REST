@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "card_transfers")
+@Table(name = "transfers")
 @Setter
 @Getter
 @NoArgsConstructor
@@ -35,4 +35,12 @@ public class Transfer {
 
     @Column(nullable = false)
     private LocalDateTime time;
+
+    public Transfer(User user, String fromCardNumber, String toCardNumber, BigDecimal amount, LocalDateTime time) {
+        this.user = user;
+        this.fromCardNumber = fromCardNumber;
+        this.toCardNumber = toCardNumber;
+        this.amount = amount;
+        this.time = time;
+    }
 }

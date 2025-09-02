@@ -50,7 +50,7 @@
             </column>
         </createTable>
 
-        <createTable tableName="card_transfers" remarks="Таблица переводов по картам">
+        <createTable tableName="transfers" remarks="Таблица переводов по картам">
             <column name="id" type="serial" remarks="Уникальный идентификатор перевода">
                 <constraints primaryKey="true" primaryKeyName="transfers_id_pk"/>
             </column>

@@ -1,6 +1,7 @@
 package com.example.bankcards.service;
 
 import com.example.bankcards.dto.user.UserDtoResponse;
+import org.springframework.security.core.userdetails.UserDetailsService;
 
 import java.util.List;
 

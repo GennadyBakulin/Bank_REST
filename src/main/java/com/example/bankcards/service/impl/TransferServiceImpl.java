@@ -5,12 +5,17 @@ import com.example.bankcards.dto.transfer.TransferDtoResponse;
 import com.example.bankcards.entity.card.Card;
 import com.example.bankcards.entity.card.CardStatus;
 import com.example.bankcards.entity.transfer.Transfer;
+import com.example.bankcards.entity.user.User;
 import com.example.bankcards.exception.exceptions.CardNotFoundException;
 import com.example.bankcards.exception.exceptions.InvalidTransactionRequest;
+import com.example.bankcards.exception.exceptions.UserNotFoundException;
 import com.example.bankcards.repository.CardRepository;
 import com.example.bankcards.repository.TransferRepository;
+import com.example.bankcards.repository.UserRepository;
 import com.example.bankcards.service.TransferService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -21,6 +26,7 @@ public class TransferServiceImpl implements TransferService {
 
     private final TransferRepository transferRepository;
     private final CardRepository cardRepository;
+    private final UserRepository userRepository;
 
     @Override
     public TransferDtoResponse transferBetweenCardsOneUser(TransferDtoRequest request) {
@@ -34,9 +40,12 @@ public class TransferServiceImpl implements TransferService {
             throw new InvalidTransactionRequest("Нельзя сделать перевод между одной картой");
         }
 
-//        if (!userEmail.equals(fromCard.getUserEmail()) || !userEmail.equals(toCard.getUserEmail())) {
-//            throw new InvalidTransactionRequest("Карты не принадлежат пользователю!");
-//        }
+        UserDetails principal = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.findByEmail(principal.getUsername()).orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        if (!user.equals(fromCard.getUser()) || !user.equals(toCard.getUser())) {
+            throw new InvalidTransactionRequest("Карты не принадлежат пользователю!");
+        }
 
         if (fromCard.getStatus() != CardStatus.ACTIVE || toCard.getStatus() != CardStatus.ACTIVE) {
             throw new InvalidTransactionRequest("Карты не активны");
@@ -52,14 +61,14 @@ public class TransferServiceImpl implements TransferService {
         cardRepository.save(fromCard);
         cardRepository.save(toCard);
 
-        Transfer transaction = new Transfer(
-                principal,
+        Transfer transfer = new Transfer(
+                user,
                 fromCard.getNumber(),
                 toCard.getNumber(),
                 request.getAmount(),
                 LocalDateTime.now());
 
-        Transfer saveTransaction = transferRepository.save(transaction);
+        Transfer saveTransaction = transferRepository.save(transfer);
 
         return TransferDtoResponse.builder()
                 .fromCardNumber(saveTransaction.getFromCardNumber())
