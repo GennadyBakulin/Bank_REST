@@ -21,8 +21,9 @@ public class TransferController {
     public ResponseEntity<TransferDtoResponse> transferBetweenOwnCards(
             @Valid @RequestBody TransferDtoRequest request) {
 
-        TransferDtoResponse response = transferService.transferBetweenCardsOneUser(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(transferService.transferBetweenCardsOneUser(request));
     }
 
     @GetMapping("/admin/all-transfers")
@@ -30,8 +31,7 @@ public class TransferController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        PageDtoResponse<TransferDtoResponse> response = transferService.getAll(page, size);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(transferService.getAll(page, size));
     }
 
     @GetMapping("/my/transfers")
@@ -39,7 +39,6 @@ public class TransferController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        PageDtoResponse<TransferDtoResponse> response = transferService.getAllByUser(page, size);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(transferService.getAllByUser(page, size));
     }
 }

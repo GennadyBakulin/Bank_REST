@@ -25,7 +25,9 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<String> register(@Valid @RequestBody RegistrationDtoRequest request) {
         authenticationService.register(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body("User registered successfully");
     }
 
     @PostMapping("/login")
@@ -38,7 +40,7 @@ public class AuthController {
             HttpServletRequest request,
             HttpServletResponse response) {
 
-        return authenticationService.refreshToken(request, response);
+        return ResponseEntity.ok(authenticationService.refreshToken(request, response));
     }
 
     @PostMapping("/logout")

@@ -48,4 +48,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> userNotOwnerOfCard(UserNotOwnerOfCardException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler
+    public ResponseEntity<String> userNotAuthorize(UserNotAuthorizeException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.UNAUTHORIZED);
+    }
 }

@@ -6,6 +6,7 @@ import com.example.bankcards.dto.authentification.RegistrationDtoRequest;
 import com.example.bankcards.entity.user.Role;
 import com.example.bankcards.entity.user.User;
 import com.example.bankcards.exception.exceptions.PasswordInvalidException;
+import com.example.bankcards.exception.exceptions.UserNotAuthorizeException;
 import com.example.bankcards.exception.exceptions.UserNotFoundException;
 import com.example.bankcards.repository.UserRepository;
 import com.example.bankcards.security.AuthenticationService;
@@ -17,8 +18,6 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -80,14 +79,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public ResponseEntity<JwtDtoResponse> refreshToken(
-            HttpServletRequest request,
-            HttpServletResponse response) {
+    public JwtDtoResponse refreshToken(HttpServletRequest request, HttpServletResponse response) {
 
         String authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            throw new UserNotAuthorizeException("The user is not logged in");
         }
 
         String token = authorizationHeader.substring(7);
@@ -104,16 +101,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
             jwtService.saveUserToken(accessToken, refreshToken, user);
 
-            return new ResponseEntity<>(
-                    (JwtDtoResponse.builder()
-                            .accessToken(accessToken)
-                            .refreshToken(refreshToken)
-                            .build()),
-                    HttpStatus.OK
-            );
+            return JwtDtoResponse.builder()
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .build();
         }
 
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        throw new UserNotAuthorizeException("The user is not logged in");
     }
 
     @Override
