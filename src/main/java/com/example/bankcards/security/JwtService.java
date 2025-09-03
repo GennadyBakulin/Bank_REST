@@ -19,4 +19,8 @@ public interface JwtService {
     String generateAccessToken(User user);
 
     String generateRefreshToken(User user);
+
+    void revokeAllToken(User user);
+
+    void saveUserToken(String accessToken, String refreshToken, User user);
 }

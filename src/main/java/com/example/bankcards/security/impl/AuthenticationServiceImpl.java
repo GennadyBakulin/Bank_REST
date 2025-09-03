@@ -9,7 +9,6 @@ import com.example.bankcards.exception.exceptions.PasswordInvalidException;
 import com.example.bankcards.exception.exceptions.UserNotFoundException;
 import com.example.bankcards.repository.UserRepository;
 import com.example.bankcards.security.AuthenticationService;
-import com.example.bankcards.security.TokenService;
 import com.example.bankcards.util.UserUtils;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,8 +35,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final PasswordEncoder passwordEncoder;
 
     private final AuthenticationManager authenticationManager;
-
-    private final TokenService tokenService;
 
     @Override
     public void register(RegistrationDtoRequest request) {
@@ -72,9 +69,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
 
-        tokenService.revokeAllToken(user);
+        jwtService.revokeAllToken(user);
 
-        tokenService.saveUserToken(accessToken, refreshToken, user);
+        jwtService.saveUserToken(accessToken, refreshToken, user);
 
         return JwtDtoResponse.builder()
                 .accessToken(accessToken)
@@ -103,9 +100,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             String accessToken = jwtService.generateAccessToken(user);
             String refreshToken = jwtService.generateRefreshToken(user);
 
-            tokenService.revokeAllToken(user);
+            jwtService.revokeAllToken(user);
 
-            tokenService.saveUserToken(accessToken, refreshToken, user);
+            jwtService.saveUserToken(accessToken, refreshToken, user);
 
             return new ResponseEntity<>(
                     (JwtDtoResponse.builder()
@@ -132,7 +129,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         User user = findUserByEmail(username);
 
-        tokenService.revokeAllToken(user);
+        jwtService.revokeAllToken(user);
 
         clearAuthCookies(response);
     }

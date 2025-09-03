@@ -1,5 +1,6 @@
 package com.example.bankcards.security.impl;
 
+import com.example.bankcards.entity.token.Token;
 import com.example.bankcards.entity.user.User;
 import com.example.bankcards.repository.TokenRepository;
 import com.example.bankcards.security.JwtService;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.List;
 import java.util.function.Function;
 
 @Service
@@ -57,6 +59,32 @@ public class JwtServiceImpl implements JwtService {
         return username.equals(user.getUsername())
                 && isAccessTokenExpired(token)
                 && isValidRefreshToken;
+    }
+
+    @Override
+    public void revokeAllToken(User user) {
+
+        List<Token> validTokens = tokenRepository.findAllAccessTokenByUser_Email(user.getEmail());
+
+        if (!validTokens.isEmpty()) {
+            validTokens.forEach(t -> t.setLoggedOut(true)
+            );
+        }
+
+        tokenRepository.saveAll(validTokens);
+    }
+
+    @Override
+    public void saveUserToken(String accessToken, String refreshToken, User user) {
+
+        Token token = new Token();
+
+        token.setAccessToken(accessToken);
+        token.setRefreshToken(refreshToken);
+        token.setLoggedOut(false);
+        token.setUser(user);
+
+        tokenRepository.save(token);
     }
 
     private boolean isAccessTokenExpired(String token) {
