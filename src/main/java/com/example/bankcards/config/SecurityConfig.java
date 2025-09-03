@@ -34,19 +34,19 @@ public class SecurityConfig {
 
     // Список публичных endpoints для аутентификации
     private static final String[] AUTH_WHITELIST = {
-            "/error",
             "/api/auth/register",
             "/api/auth/login"
     };
 
     // Список endpoints для роли ADMIN
     private static final String[] ADMIN_LIST = {
-            "/admin/**"
+            "/api/transfers/admin/**"
     };
 
     // Список endpoints для роли USER
     private static final String[] USER_LIST = {
-            "/user/**"
+            "/api/transfers/my/**"
+
     };
 
     private final JwtFilter jwtFIlter;
@@ -66,7 +66,7 @@ public class SecurityConfig {
                         .requestMatchers(AUTH_WHITELIST).permitAll()
                         .requestMatchers(ADMIN_LIST).hasAuthority("ADMIN")
                         .requestMatchers(USER_LIST).hasAuthority("USER")
-                        .requestMatchers("/api/auth/refresh-token").authenticated()
+                        .requestMatchers("/api/auth/refresh-token", "/logout").authenticated()
                         .anyRequest().authenticated()
                 )
                 .userDetailsService(userDetailsService)
