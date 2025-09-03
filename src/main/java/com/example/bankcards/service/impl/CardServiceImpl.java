@@ -1,6 +1,6 @@
 package com.example.bankcards.service.impl;
 
-import com.example.bankcards.dto.card.CardDtoRequest;
+import com.example.bankcards.dto.card.CardCreateDtoRequest;
 import com.example.bankcards.dto.card.CardDtoResponse;
 import com.example.bankcards.dto.card.TotalBalanceDtoResponse;
 import com.example.bankcards.dto.page.PageDtoResponse;
@@ -34,7 +34,7 @@ public class CardServiceImpl implements CardService {
 
     @Override
     @Transactional
-    public CardDtoResponse create(CardDtoRequest request) {
+    public CardDtoResponse create(CardCreateDtoRequest request) {
         User user = findUserByEmail(request.getUserEmail());
 
         if (!CardUtils.validateCardNumber(request.getNumber())) {
@@ -58,19 +58,19 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
-    public void blocked(String cardNumber) {
-        Card card = findCardByNumber(cardNumber);
+    public void blocked(String number) {
+        Card card = findCardByNumber(number);
         card.setStatus(CardStatus.BLOCKED);
         cardRepository.save(card);
     }
 
     @Override
-    public void activation(String cardNumber) {
-        Card card = findCardByNumber(cardNumber);
+    public void activation(String number) {
+        Card card = findCardByNumber(number);
 
         if (checkExpiredCard(card)) {
             throw new CardExpiredException("Card with number= " +
-                    cardNumber + " has status expired and cannot be activated");
+                    number + " has status expired and cannot be activated");
         }
 
         card.setStatus(CardStatus.ACTIVE);
@@ -78,8 +78,8 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
-    public void delete(String cardNumber) {
-        cardRepository.delete(findCardByNumber(cardNumber));
+    public void delete(String number) {
+        cardRepository.delete(findCardByNumber(number));
     }
 
     @Override

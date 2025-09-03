@@ -1,17 +1,15 @@
 package com.example.bankcards.dto.card;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 
 @Data
-public class CardDtoRequest {
+public class CardCreateDtoRequest {
 
     @JsonProperty("card_number")
     @NotBlank

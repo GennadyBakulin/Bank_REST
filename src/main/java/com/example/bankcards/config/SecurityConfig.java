@@ -1,8 +1,8 @@
 package com.example.bankcards.config;
 
-import com.example.bankcards.security.impl.UserDetailsServiceImpl;
 import com.example.bankcards.security.handler.CustomAccessDeniedHandler;
 import com.example.bankcards.security.handler.CustomLogoutHandler;
+import com.example.bankcards.security.impl.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,15 +41,21 @@ public class SecurityConfig {
     // Список endpoints для роли ADMIN
     private static final String[] ADMIN_LIST = {
             "/api/transfers/all/**",
-            "/api/users",
-            "/api/users/**"
+            "/api/users/**",
+            "/api/cards/admin/**"
     };
 
     // Список endpoints для роли USER
     private static final String[] USER_LIST = {
-            "/api/transfers/my",
-            "/api/transfers/my/**"
+            "/api/transfers/my/**",
+            "/api/cards/my/**"
 
+    };
+
+    // Список endpoints для всех аутентифицированных пользователей вне зависимости от их роли
+    private static final String[] AUTHENTICATED_LIST = {
+            "/api/auth/refresh-token",
+            "/logout"
     };
 
     private final JwtFilter jwtFIlter;
@@ -69,7 +75,7 @@ public class SecurityConfig {
                         .requestMatchers(AUTH_WHITELIST).permitAll()
                         .requestMatchers(ADMIN_LIST).hasAuthority("ADMIN")
                         .requestMatchers(USER_LIST).hasAuthority("USER")
-                        .requestMatchers("/api/auth/refresh-token", "/logout").authenticated()
+                        .requestMatchers(AUTHENTICATED_LIST).authenticated()
                         .anyRequest().authenticated()
                 )
                 .userDetailsService(userDetailsService)
