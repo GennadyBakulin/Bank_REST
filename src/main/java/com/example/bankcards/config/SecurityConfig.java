@@ -40,12 +40,14 @@ public class SecurityConfig {
 
     // Список endpoints для роли ADMIN
     private static final String[] ADMIN_LIST = {
-            "/api/transfers/admin/**",
-            "/api/users"
+            "/api/transfers/all/**",
+            "/api/users",
+            "/api/users/**"
     };
 
     // Список endpoints для роли USER
     private static final String[] USER_LIST = {
+            "/api/transfers/my",
             "/api/transfers/my/**"
 
     };

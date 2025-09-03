@@ -26,7 +26,7 @@ public class TransferController {
                 .body(transferService.transferBetweenCardsOneUser(request));
     }
 
-    @GetMapping("/admin/all-transfers")
+    @GetMapping("/all")
     public ResponseEntity<PageDtoResponse<TransferDtoResponse>> getAllTransfers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -34,7 +34,7 @@ public class TransferController {
         return ResponseEntity.ok(transferService.getAll(page, size));
     }
 
-    @GetMapping("/my/transfers")
+    @GetMapping("/my")
     public ResponseEntity<PageDtoResponse<TransferDtoResponse>> getMyTransfers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {

@@ -21,7 +21,7 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserByEmail(email));
     }
 
-    @GetMapping("/all-users")
+    @GetMapping("/all")
     public ResponseEntity<PageDtoResponse<UserDtoResponse>> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
