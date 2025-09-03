@@ -1,4 +1,4 @@
-package com.example.bankcards.service;
+package com.example.bankcards.security;
 
 import com.example.bankcards.dto.authentification.AuthenticationDtoRequest;
 import com.example.bankcards.dto.authentification.JwtDtoResponse;
@@ -22,4 +22,9 @@ public interface AuthenticationService {
     ResponseEntity<JwtDtoResponse> refreshToken(
             HttpServletRequest request,
             HttpServletResponse response);
+
+    /**
+     * Выход из системы
+     */
+    void logout(HttpServletRequest request, HttpServletResponse response);
 }

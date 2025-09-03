@@ -1,18 +1,17 @@
-package com.example.bankcards.service.impl;
+package com.example.bankcards.security.impl;
 
 import com.example.bankcards.dto.authentification.AuthenticationDtoRequest;
 import com.example.bankcards.dto.authentification.JwtDtoResponse;
 import com.example.bankcards.dto.authentification.RegistrationDtoRequest;
-import com.example.bankcards.entity.token.Token;
 import com.example.bankcards.entity.user.Role;
 import com.example.bankcards.entity.user.User;
 import com.example.bankcards.exception.exceptions.PasswordInvalidException;
 import com.example.bankcards.exception.exceptions.UserNotFoundException;
-import com.example.bankcards.repository.TokenRepository;
 import com.example.bankcards.repository.UserRepository;
-import com.example.bankcards.security.JwtServiceImpl;
-import com.example.bankcards.service.AuthenticationService;
+import com.example.bankcards.security.AuthenticationService;
+import com.example.bankcards.security.TokenService;
 import com.example.bankcards.util.UserUtils;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.Email;
@@ -26,8 +25,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 public class AuthenticationServiceImpl implements AuthenticationService {
@@ -40,7 +37,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final AuthenticationManager authenticationManager;
 
-    private final TokenRepository tokenRepository;
+    private final TokenService tokenService;
 
     @Override
     public void register(RegistrationDtoRequest request) {
@@ -75,9 +72,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
 
-        revokeAllToken(user);
+        tokenService.revokeAllToken(user);
 
-        saveUserToken(accessToken, refreshToken, user);
+        tokenService.saveUserToken(accessToken, refreshToken, user);
 
         return JwtDtoResponse.builder()
                 .accessToken(accessToken)
@@ -106,9 +103,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             String accessToken = jwtService.generateAccessToken(user);
             String refreshToken = jwtService.generateRefreshToken(user);
 
-            revokeAllToken(user);
+            tokenService.revokeAllToken(user);
 
-            saveUserToken(accessToken, refreshToken, user);
+            tokenService.saveUserToken(accessToken, refreshToken, user);
 
             return new ResponseEntity<>(
                     (JwtDtoResponse.builder()
@@ -122,29 +119,38 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
-    private void revokeAllToken(User user) {
+    @Override
+    public void logout(HttpServletRequest request, HttpServletResponse response) {
+        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        List<Token> validTokens = tokenRepository.findAllAccessTokenByUser_Email(user.getEmail());
-
-        if (!validTokens.isEmpty()) {
-            validTokens.forEach(t -> {
-                t.setLoggedOut(true);
-            });
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new RuntimeException("Invalid authorization header");
         }
 
-        tokenRepository.saveAll(validTokens);
+        String token = authHeader.substring(7);
+        String username = jwtService.extractUsername(token);
+
+        User user = findUserByEmail(username);
+
+        tokenService.revokeAllToken(user);
+
+        clearAuthCookies(response);
     }
 
-    private void saveUserToken(String accessToken, String refreshToken, User user) {
+    private void clearAuthCookies(HttpServletResponse response) {
+        Cookie accessCookie = new Cookie("accessToken", null);
+        accessCookie.setHttpOnly(true);
+        accessCookie.setSecure(true);
+        accessCookie.setPath("/");
+        accessCookie.setMaxAge(0);
+        response.addCookie(accessCookie);
 
-        Token token = new Token();
-
-        token.setAccessToken(accessToken);
-        token.setRefreshToken(refreshToken);
-        token.setLoggedOut(false);
-        token.setUser(user);
-
-        tokenRepository.save(token);
+        Cookie refreshCookie = new Cookie("refreshToken", null);
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setSecure(true);
+        refreshCookie.setPath("/");
+        refreshCookie.setMaxAge(0);
+        response.addCookie(refreshCookie);
     }
 
     private void checkUniqueEmail(@NotBlank @Email String email) {
