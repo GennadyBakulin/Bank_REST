@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @Setter
 @Getter
 @NoArgsConstructor
-@EqualsAndHashCode(of = "cardNumber")
+@EqualsAndHashCode(of = "number")
 public class Card {
 
     @Id

@@ -9,6 +9,6 @@ public final class UserUtils {
     }
 
     public static boolean isValidPassword(String password) {
-        return password.matches("[0-9a-zA-Z]{6,12}");
+        return password.matches("[0-9a-zA-Z]{5,16}");
     }
 }

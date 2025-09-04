@@ -28,7 +28,7 @@ public class RegistrationDtoRequest {
     private String lastName;
 
     @NotBlank
-    @Size(min = 6, max = 12, message = "Пароль должен иметь длину от 6 до 12 символов " +
+    @Size(min = 5, max = 16, message = "Пароль должен иметь длину от 5 до 16 символов " +
             "и состоять из цифр от 0 до 9 и символов от a до z и A до Z")
     @Schema(description = "Пароль пользователя", example = "SecurePassword123!")
     private String password;
