@@ -24,6 +24,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+/**
+ * Реализация сервиса аутентификации и управления пользовательскими сессиями.
+ * Обеспечивает регистрацию, аутентификацию, обновление токенов и выход из системы.
+ */
 @Service
 @RequiredArgsConstructor
 public class AuthenticationServiceImpl implements AuthenticationService {
@@ -36,6 +40,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final AuthenticationManager authenticationManager;
 
+    /**
+     * Регистрирует нового пользователя в системе.
+     * Проверяет уникальность email и валидность пароля перед созданием учетной записи.
+     *
+     * @param request объект RegistrationDtoRequest с данными для регистрации
+     * @throws ConflictRequestException если пользователь с таким email уже существует
+     * @throws InvalidRequestException  если пароль не соответствует требованиям безопасности
+     */
     @Override
     public void register(RegistrationDtoRequest request) {
         checkUniqueEmail(request.getEmail());
@@ -55,6 +67,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         userRepository.save(user);
     }
 
+    /**
+     * Аутентифицирует пользователя и генерирует JWT токены.
+     *
+     * @param request объект AuthenticationDtoRequest с email и паролем
+     * @return JwtDtoResponse с access и refresh токенами
+     * @throws ResourceNotFoundException                                           если пользователь с указанным email не найден
+     * @throws org.springframework.security.authentication.BadCredentialsException если неверные учетные данные
+     */
     @Override
     public JwtDtoResponse authenticate(AuthenticationDtoRequest request) {
         User user = findUserByEmail(request.getEmail());
@@ -79,6 +99,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .build();
     }
 
+    /**
+     * Обновляет пару JWT токенов на основе валидного refresh токена.
+     *
+     * @param request  HTTP запрос с refresh токеном в заголовке Authorization
+     * @param response HTTP ответ для возможной установки cookies
+     * @return JwtDtoResponse с новыми access и refresh токенами
+     * @throws UnauthorizedException     если заголовок Authorization отсутствует или невалиден
+     * @throws UnauthorizedException     если refresh токен невалиден
+     * @throws ResourceNotFoundException если пользователь не найден
+     */
     @Override
     public JwtDtoResponse refreshToken(HttpServletRequest request, HttpServletResponse response) {
 
@@ -111,12 +141,20 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         throw new UnauthorizedException("The user is not logged in");
     }
 
+    /**
+     * Выполняет выход пользователя из системы.
+     *
+     * @param request  HTTP запрос с access токеном в заголовке Authorization
+     * @param response HTTP ответ для очистки cookies
+     * @throws UnauthorizedException     если заголовок Authorization отсутствует или невалиден
+     * @throws ResourceNotFoundException если пользователь не найден
+     */
     @Override
     public void logout(HttpServletRequest request, HttpServletResponse response) {
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new RuntimeException("Invalid authorization header");
+            throw new UnauthorizedException("Invalid authorization header");
         }
 
         String token = authHeader.substring(7);
@@ -129,6 +167,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         clearAuthCookies(response);
     }
 
+    /**
+     * Очищает authentication cookies в HTTP ответе.
+     * Устанавливает cookies accessToken и refreshToken с нулевым временем жизни.
+     *
+     * @param response HTTP ответ для очистки cookies
+     */
     private void clearAuthCookies(HttpServletResponse response) {
         Cookie accessCookie = new Cookie("accessToken", null);
         accessCookie.setHttpOnly(true);
@@ -145,12 +189,25 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         response.addCookie(refreshCookie);
     }
 
+    /**
+     * Проверяет уникальность email в системе.
+     *
+     * @param email email для проверки
+     * @throws ConflictRequestException если пользователь с таким email уже существует
+     */
     private void checkUniqueEmail(@NotBlank @Email String email) {
         if (userRepository.findByEmail(email).isPresent()) {
             throw new ConflictRequestException("User with email " + email + " already exists");
         }
     }
 
+    /**
+     * Находит пользователя по email.
+     *
+     * @param email email пользователя
+     * @return сущность User
+     * @throws ResourceNotFoundException если пользователь с указанным email не найден
+     */
     private User findUserByEmail(String email) {
         return userRepository
                 .findByEmail(email)
