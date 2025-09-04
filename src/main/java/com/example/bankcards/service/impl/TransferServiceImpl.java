@@ -7,9 +7,8 @@ import com.example.bankcards.entity.card.Card;
 import com.example.bankcards.entity.card.CardStatus;
 import com.example.bankcards.entity.transfer.Transfer;
 import com.example.bankcards.entity.user.User;
-import com.example.bankcards.exception.exceptions.CardNotFoundException;
-import com.example.bankcards.exception.exceptions.InvalidTransactionRequest;
-import com.example.bankcards.exception.exceptions.UserNotFoundException;
+import com.example.bankcards.exception.exceptions.InvalidRequestException;
+import com.example.bankcards.exception.exceptions.ResourceNotFoundException;
 import com.example.bankcards.repository.CardRepository;
 import com.example.bankcards.repository.TransferRepository;
 import com.example.bankcards.repository.UserRepository;
@@ -40,24 +39,24 @@ public class TransferServiceImpl implements TransferService {
         Card toCard = findCardByNumber(request.getToCardNumber());
 
         if (request.getFromCardNumber().equals(request.getToCardNumber())) {
-            throw new InvalidTransactionRequest("You can't make a transfer between the same card");
+            throw new InvalidRequestException("You can't make a transfer between the same card");
         }
 
         UserDetails principal = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository
                 .findByEmail(principal.getUsername())
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         if (!user.equals(fromCard.getUser()) || !user.equals(toCard.getUser())) {
-            throw new InvalidTransactionRequest("One or both of the cards do not belong to the user");
+            throw new InvalidRequestException("One or both of the cards do not belong to the user");
         }
 
         if (fromCard.getStatus() != CardStatus.ACTIVE || toCard.getStatus() != CardStatus.ACTIVE) {
-            throw new InvalidTransactionRequest("The cards have no active status");
+            throw new InvalidRequestException("The cards have no active status");
         }
 
         if (fromCard.getBalance().compareTo(request.getAmount()) < 0) {
-            throw new InvalidTransactionRequest("There are not enough funds on the card from " +
+            throw new InvalidRequestException("There are not enough funds on the card from " +
                     "which the transfer is being made");
         }
 
@@ -112,7 +111,7 @@ public class TransferServiceImpl implements TransferService {
 
     private Card findCardByNumber(String cardNumber) {
         return cardRepository.findByNumber(cardNumber)
-                .orElseThrow(() -> new CardNotFoundException("Card with number= " + cardNumber + " was not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Card with number= " + cardNumber + " was not found"));
     }
 
     private TransferDtoResponse mapperToDto(Transfer transfer) {

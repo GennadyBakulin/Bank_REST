@@ -7,7 +7,9 @@ import com.example.bankcards.dto.page.PageDtoResponse;
 import com.example.bankcards.entity.card.Card;
 import com.example.bankcards.entity.card.CardStatus;
 import com.example.bankcards.entity.user.User;
-import com.example.bankcards.exception.exceptions.*;
+import com.example.bankcards.exception.exceptions.ConflictRequestException;
+import com.example.bankcards.exception.exceptions.InvalidRequestException;
+import com.example.bankcards.exception.exceptions.ResourceNotFoundException;
 import com.example.bankcards.repository.CardRepository;
 import com.example.bankcards.repository.UserRepository;
 import com.example.bankcards.service.CardService;
@@ -38,7 +40,7 @@ public class CardServiceImpl implements CardService {
         User user = findUserByEmail(request.getUserEmail());
 
         if (!CardUtils.validateCardNumber(request.getNumber())) {
-            throw new CardNumberInvalidException("Invalid card number");
+            throw new InvalidRequestException("Invalid card number");
         }
 
         checkUniqueCardNumber(request.getNumber());
@@ -69,7 +71,7 @@ public class CardServiceImpl implements CardService {
         Card card = findCardByNumber(number);
 
         if (checkExpiredCard(card)) {
-            throw new CardExpiredException("Card with number= " +
+            throw new ConflictRequestException("Card with number= " +
                     number + " has status expired and cannot be activated");
         }
 
@@ -156,7 +158,7 @@ public class CardServiceImpl implements CardService {
 
     private void checkBelongCardUser(Card card, UserDetails principal) {
         if (!card.getUser().getEmail().equals(principal.getUsername())) {
-            throw new CardNotFoundException("You has not card with number= " + card.getNumber());
+            throw new ResourceNotFoundException("You has not card with number= " + card.getNumber());
         }
     }
 
@@ -170,19 +172,19 @@ public class CardServiceImpl implements CardService {
 
     private Card findCardByNumber(String cardNumber) {
         return cardRepository.findByNumber(cardNumber)
-                .orElseThrow(() -> new CardNotFoundException("Card not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Card not found"));
     }
 
     private void checkUniqueCardNumber(String cardNumber) {
         if (cardRepository.existsByNumber(cardNumber)) {
-            throw new CardAlreadyExistsException("Card already exist");
+            throw new ConflictRequestException("Card already exist");
         }
     }
 
     private User findUserByEmail(String email) {
         return userRepository
                 .findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User with email= " + email + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User with email= " + email + " not found"));
     }
 
     private CardDtoResponse mapperToDto(Card card) {

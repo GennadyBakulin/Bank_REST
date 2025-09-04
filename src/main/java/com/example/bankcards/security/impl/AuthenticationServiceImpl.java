@@ -5,10 +5,10 @@ import com.example.bankcards.dto.authentification.JwtDtoResponse;
 import com.example.bankcards.dto.authentification.RegistrationDtoRequest;
 import com.example.bankcards.entity.user.Role;
 import com.example.bankcards.entity.user.User;
-import com.example.bankcards.exception.exceptions.PasswordInvalidException;
-import com.example.bankcards.exception.exceptions.UserAlreadyExistException;
-import com.example.bankcards.exception.exceptions.UserNotAuthorizeException;
-import com.example.bankcards.exception.exceptions.UserNotFoundException;
+import com.example.bankcards.exception.exceptions.ConflictRequestException;
+import com.example.bankcards.exception.exceptions.InvalidRequestException;
+import com.example.bankcards.exception.exceptions.ResourceNotFoundException;
+import com.example.bankcards.exception.exceptions.UnauthorizedException;
 import com.example.bankcards.repository.UserRepository;
 import com.example.bankcards.security.AuthenticationService;
 import com.example.bankcards.util.UserUtils;
@@ -41,7 +41,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         checkUniqueEmail(request.getEmail());
 
         if (!UserUtils.isValidPassword(request.getPassword())) {
-            throw new PasswordInvalidException("Invalid password");
+            throw new InvalidRequestException("Invalid password");
         }
 
         User user = new User(
@@ -85,7 +85,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            throw new UserNotAuthorizeException("The user is not logged in");
+            throw new UnauthorizedException("The user is not logged in");
         }
 
         String token = authorizationHeader.substring(7);
@@ -108,7 +108,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .build();
         }
 
-        throw new UserNotAuthorizeException("The user is not logged in");
+        throw new UnauthorizedException("The user is not logged in");
     }
 
     @Override
@@ -147,13 +147,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private void checkUniqueEmail(@NotBlank @Email String email) {
         if (userRepository.findByEmail(email).isPresent()) {
-            throw new UserAlreadyExistException("User with email " + email + " already exists");
+            throw new ConflictRequestException("User with email " + email + " already exists");
         }
     }
 
     private User findUserByEmail(String email) {
         return userRepository
                 .findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User with email= " + email + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User with email= " + email + " not found"));
     }
 }

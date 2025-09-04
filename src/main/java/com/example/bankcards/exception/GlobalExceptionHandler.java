@@ -1,61 +1,55 @@
 package com.example.bankcards.exception;
 
-import com.example.bankcards.exception.exceptions.*;
+import com.example.bankcards.dto.exception.ErrorDtoResponse;
+import com.example.bankcards.exception.exceptions.ConflictRequestException;
+import com.example.bankcards.exception.exceptions.InvalidRequestException;
+import com.example.bankcards.exception.exceptions.ResourceNotFoundException;
+import com.example.bankcards.exception.exceptions.UnauthorizedException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@ControllerAdvice
+import java.time.LocalDateTime;
+
+@Slf4j
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler
-    public ResponseEntity<String> userNotFound(UserNotFoundException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
+    @ExceptionHandler({ResourceNotFoundException.class})
+    public ResponseEntity<ErrorDtoResponse> handleResourceNotFound(Exception ex) {
+        log.warn(ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(createErrorResponse(HttpStatus.NOT_FOUND.value(), ex.getMessage()));
     }
 
-    @ExceptionHandler
-    public ResponseEntity<String> cardNotFound(CardNotFoundException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
+    @ExceptionHandler({InvalidRequestException.class})
+    public ResponseEntity<ErrorDtoResponse> handleBadRequest(Exception ex) {
+        log.warn(ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(createErrorResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
     }
 
-    @ExceptionHandler
-    public ResponseEntity<String> cardNumberInvalid(CardNumberInvalidException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    @ExceptionHandler({ConflictRequestException.class})
+    public ResponseEntity<ErrorDtoResponse> handleConflict(Exception ex) {
+        log.warn(ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(createErrorResponse(HttpStatus.CONFLICT.value(), ex.getMessage()));
     }
 
-    @ExceptionHandler
-    public ResponseEntity<String> cardAlreadyExists(CardAlreadyExistsException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.CONFLICT);
+    @ExceptionHandler({UnauthorizedException.class})
+    public ResponseEntity<ErrorDtoResponse> handleUnauthorized(Exception ex) {
+        log.warn(ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(createErrorResponse(HttpStatus.UNAUTHORIZED.value(), ex.getMessage()));
     }
 
-    @ExceptionHandler
-    public ResponseEntity<String> invalidTransactionRequest(InvalidTransactionRequest ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
-    }
-
-    @ExceptionHandler
-    public ResponseEntity<String> passwordInvalid(PasswordInvalidException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
-    }
-
-    @ExceptionHandler
-    public ResponseEntity<String> cardExpired(CardExpiredException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.CONFLICT);
-    }
-
-    @ExceptionHandler
-    public ResponseEntity<String> userNotOwnerOfCard(UserNotOwnerOfCardException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
-    }
-
-    @ExceptionHandler
-    public ResponseEntity<String> userNotAuthorize(UserNotAuthorizeException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.UNAUTHORIZED);
-    }
-
-    @ExceptionHandler
-    public ResponseEntity<String> userAlreadyExistException(UserAlreadyExistException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    private ErrorDtoResponse createErrorResponse(int code, String message) {
+        return ErrorDtoResponse.builder()
+                .code(code)
+                .message(message)
+                .timestamp(LocalDateTime.now())
+                .build();
     }
 }

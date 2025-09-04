@@ -3,7 +3,7 @@ package com.example.bankcards.service.impl;
 import com.example.bankcards.dto.page.PageDtoResponse;
 import com.example.bankcards.dto.user.UserDtoResponse;
 import com.example.bankcards.entity.user.User;
-import com.example.bankcards.exception.exceptions.UserNotFoundException;
+import com.example.bankcards.exception.exceptions.ResourceNotFoundException;
 import com.example.bankcards.repository.UserRepository;
 import com.example.bankcards.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -49,7 +49,7 @@ public class UserServiceImpl implements UserService {
     private User findUserByEmail(String email) {
         return userRepository
                 .findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User with email= " + email + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User with email= " + email + " not found"));
     }
 
     private UserDtoResponse mapperToDto(User user) {
