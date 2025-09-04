@@ -43,8 +43,8 @@ public class TransferController {
                             examples = @ExampleObject(
                                     value = """
                                             {
-                                              "fromCardNumber": "1234567812345678",
-                                              "toCardNumber": "8765432187654321",
+                                              "from_card_number": "1234567812345678",
+                                              "to_card_number": "8765432187654321",
                                               "amount": 1000.00
                                             }
                                             """

@@ -47,8 +47,8 @@ public class AuthController {
                                             {
                                               "email": "user@example.com",
                                               "name": "John",
-                                              "lastName": "Doe",
-                                              "password": "SecurePassword123!"
+                                              "last_name": "Doe",
+                                              "password": "Password123"
                                             }
                                             """
                             )
@@ -94,7 +94,7 @@ public class AuthController {
                                     value = """
                                             {
                                               "email": "user@example.com",
-                                              "password": "SecurePassword123!"
+                                              "password": "Password123"
                                             }
                                             """
                             )

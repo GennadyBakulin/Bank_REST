@@ -46,17 +46,28 @@ security:
     access_token_expiration: 36000000 # 10 hours
     refresh_token_expiration: 252000000 # 7 days
 
+# Swagger configuration
 springdoc:
   api-docs:
     path: /api-docs
+    enabled: true
   swagger-ui:
+    url: /api-docs
+    disable-swagger-default-url: true
+    config-url: /api-docs/swagger-config
     path: /swagger-ui.html
+    enabled: true
     tags-sorter: alpha
-    operations-sorter: alpha
+    operations-sorter: method
+    doc-expansion: none
+    display-operation-id: true
     display-request-duration: true
-    filter: true
+    persist-authorization: true
     oauth:
       client-id: swagger-ui
       client-secret: secret
-      realm: bankcards
-      app-name: Bank Cards API
+      use-pkce-with-authorization-code-grant: true
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+  model-and-view-allowed: true
+  override-with-generic-response: false

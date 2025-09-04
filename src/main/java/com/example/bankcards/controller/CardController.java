@@ -46,8 +46,8 @@ public class CardController {
                                     value = """
                                             {
                                               "number": "1234567812345678",
-                                              "userEmail": "user@example.com",
-                                              "countMonth": 36,
+                                              "user_email": "user@example.com",
+                                              "count_month": 36,
                                               "amount": 1000.00
                                             }
                                             """
@@ -359,7 +359,7 @@ public class CardController {
         return ResponseEntity.ok(cardService.getAllByUser(page, size));
     }
 
-    @GetMapping("/my")
+    @PostMapping("/my")
     @PreAuthorize("hasRole('USER')")
     @Operation(
             summary = "Получить карту по номеру",
