@@ -6,6 +6,7 @@ import com.example.bankcards.dto.authentification.RegistrationDtoRequest;
 import com.example.bankcards.entity.user.Role;
 import com.example.bankcards.entity.user.User;
 import com.example.bankcards.exception.exceptions.PasswordInvalidException;
+import com.example.bankcards.exception.exceptions.UserAlreadyExistException;
 import com.example.bankcards.exception.exceptions.UserNotAuthorizeException;
 import com.example.bankcards.exception.exceptions.UserNotFoundException;
 import com.example.bankcards.repository.UserRepository;
@@ -146,7 +147,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private void checkUniqueEmail(@NotBlank @Email String email) {
         if (userRepository.findByEmail(email).isPresent()) {
-            throw new RuntimeException("User with email " + email + " already exists");
+            throw new UserAlreadyExistException("User with email " + email + " already exists");
         }
     }
 

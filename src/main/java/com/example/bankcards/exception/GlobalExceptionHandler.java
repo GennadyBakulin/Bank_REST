@@ -53,4 +53,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> userNotAuthorize(UserNotAuthorizeException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.UNAUTHORIZED);
     }
+
+    @ExceptionHandler
+    public ResponseEntity<String> userAlreadyExistException(UserAlreadyExistException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
 }
