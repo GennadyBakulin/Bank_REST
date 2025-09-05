@@ -209,7 +209,7 @@ public class CardController {
     )
     @ApiResponses({
             @ApiResponse(
-                    responseCode = "204",
+                    responseCode = "200",
                     description = "Карта успешно удалена"
             ),
             @ApiResponse(
@@ -224,7 +224,7 @@ public class CardController {
     public ResponseEntity<Void> deleteCard(@Valid @RequestBody CardNumberDtoRequest request) {
 
         cardService.delete(request.getNumber());
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/admin/all")
