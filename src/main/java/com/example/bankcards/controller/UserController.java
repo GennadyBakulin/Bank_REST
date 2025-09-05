@@ -2,6 +2,7 @@ package com.example.bankcards.controller;
 
 import com.example.bankcards.dto.page.PageDtoResponse;
 import com.example.bankcards.dto.user.UserDtoResponse;
+import com.example.bankcards.dto.user.UserEmailDtoRequest;
 import com.example.bankcards.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,19 +28,26 @@ public class UserController {
 
     private final UserService userService;
 
-    @GetMapping
+    @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             summary = "Получить пользователя по email",
             description = "Администратор получает информацию о пользователе по email",
-            parameters = {
-                    @Parameter(
-                            name = "email",
-                            description = "Email пользователя",
-                            required = true,
-                            example = "user@example.com"
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Email пользователя",
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = UserEmailDtoRequest.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                            {
+                                              "email": "user@example.com"
+                                            }
+                                            """
+                            )
                     )
-            }
+            )
     )
     @ApiResponses({
             @ApiResponse(
@@ -68,9 +77,9 @@ public class UserController {
                     description = "Доступ запрещен. Требуются права администратора"
             )
     })
-    public ResponseEntity<UserDtoResponse> getUserByEmail(@RequestParam String email) {
+    public ResponseEntity<UserDtoResponse> getUserByEmail(@Valid @RequestBody UserEmailDtoRequest request) {
 
-        return ResponseEntity.ok(userService.getUserByEmail(email));
+        return ResponseEntity.ok(userService.getUserByEmail(request.getEmail()));
     }
 
     @GetMapping("/all")
@@ -140,14 +149,21 @@ public class UserController {
     @Operation(
             summary = "Удалить пользователя",
             description = "Администратор удаляет пользователя по email",
-            parameters = {
-                    @Parameter(
-                            name = "email",
-                            description = "Email пользователя для удаления",
-                            required = true,
-                            example = "user@example.com"
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Email пользователя",
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = UserEmailDtoRequest.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                            {
+                                              "email": "user@example.com"
+                                            }
+                                            """
+                            )
                     )
-            }
+            )
     )
     @ApiResponses({
             @ApiResponse(
@@ -167,10 +183,9 @@ public class UserController {
                     description = "Доступ запрещен. Требуются права администратора"
             )
     })
-    public ResponseEntity<String> deleteUser(
-            @RequestParam String email) {
+    public ResponseEntity<String> deleteUser(@Valid @RequestBody UserEmailDtoRequest request) {
 
-        userService.deleteByEmail(email);
+        userService.deleteByEmail(request.getEmail());
         return ResponseEntity.ok("The user has been successfully deleted");
     }
 }
