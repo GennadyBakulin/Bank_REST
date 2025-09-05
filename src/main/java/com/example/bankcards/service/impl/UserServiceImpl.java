@@ -72,6 +72,13 @@ public class UserServiceImpl implements UserService {
         userRepository.delete(findUserByEmail(email));
     }
 
+    /**
+     * Находит пользователя по email в репозитории.
+     *
+     * @param email email пользователя для поиска
+     * @return сущность User
+     * @throws ResourceNotFoundException если пользователь с указанным email не найден
+     */
     private User findUserByEmail(String email) {
         return userRepository
                 .findByEmail(email)
