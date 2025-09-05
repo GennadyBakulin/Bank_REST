@@ -24,6 +24,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Реализация сервиса для управления переводами между картами.
+ * Предоставляет методы для выполнения переводов и получения истории переводов.
+ */
 @Service
 @RequiredArgsConstructor
 public class TransferServiceImpl implements TransferService {
@@ -32,6 +36,16 @@ public class TransferServiceImpl implements TransferService {
     private final CardRepository cardRepository;
     private final UserRepository userRepository;
 
+    /**
+     * Выполняет перевод между двумя картами одного пользователя.
+     * Проверяет принадлежность карт пользователю и достаточность средств на карте-отправителе.
+     *
+     * @param request объект TransferDtoRequest с данными для перевода
+     * @return TransferDtoResponse с информацией о выполненном переводе
+     * @throws com.example.bankcards.exception.exceptions.ResourceNotFoundException если карта не найдена
+     * @throws com.example.bankcards.exception.exceptions.InvalidRequestException   если карты не принадлежат пользователю
+     * @throws com.example.bankcards.exception.exceptions.ConflictRequestException  если попытка перевода на ту же карту
+     */
     @Override
     @Transactional
     public TransferDtoResponse transferBetweenCardsOneUser(TransferDtoRequest request) {
@@ -77,6 +91,14 @@ public class TransferServiceImpl implements TransferService {
         return mapperToDto(saveTransfer);
     }
 
+    /**
+     * Получает записи о всех переводах в системе с пагинацией.
+     * Метод доступен только для администраторов.
+     *
+     * @param pageNumber номер страницы (начинается с 0)
+     * @param pageSize   количество записей на странице
+     * @return PageDtoResponse<TransferDtoResponse> страница с историей переводов
+     */
     @Override
     public PageDtoResponse<TransferDtoResponse> getAll(int pageNumber, int pageSize) {
         Page<Transfer> pageTransfers = transferRepository.findAll(PageRequest.of(pageNumber, pageSize));
@@ -92,6 +114,14 @@ public class TransferServiceImpl implements TransferService {
                 pageTransfers.getNumber());
     }
 
+    /**
+     * Получает записи о всех переводах текущего пользователя с пагинацией.
+     * Пользователь может видеть только свои собственные переводы.
+     *
+     * @param pageNumber номер страницы (начинается с 0)
+     * @param pageSize   количество записей на странице
+     * @return PageDtoResponse<TransferDtoResponse> страница с историей переводов пользователя
+     */
     @Override
     public PageDtoResponse<TransferDtoResponse> getAllByUser(int pageNumber, int pageSize) {
         UserDetails principal = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -109,11 +139,24 @@ public class TransferServiceImpl implements TransferService {
                 pageTransfers.getNumber());
     }
 
+    /**
+     * Находит карту по её номеру в репозитории.
+     *
+     * @param cardNumber номер карты для поиска
+     * @return сущность Card
+     * @throws ResourceNotFoundException если карта с указанным номером не найдена
+     */
     private Card findCardByNumber(String cardNumber) {
         return cardRepository.findByNumber(cardNumber)
                 .orElseThrow(() -> new ResourceNotFoundException("Card with number= " + cardNumber + " was not found"));
     }
 
+    /**
+     * Преобразует сущность Transfer в DTO объект TransferDtoResponse.
+     *
+     * @param transfer сущность перевода
+     * @return TransferDtoResponse с данными о переводе
+     */
     private TransferDtoResponse mapperToDto(Transfer transfer) {
 
         return TransferDtoResponse.builder()
