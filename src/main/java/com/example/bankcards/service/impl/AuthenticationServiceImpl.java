@@ -1,4 +1,4 @@
-package com.example.bankcards.security.impl;
+package com.example.bankcards.service.impl;
 
 import com.example.bankcards.dto.authentification.AuthenticationDtoRequest;
 import com.example.bankcards.dto.authentification.JwtDtoResponse;
@@ -10,7 +10,8 @@ import com.example.bankcards.exception.exceptions.InvalidRequestException;
 import com.example.bankcards.exception.exceptions.ResourceNotFoundException;
 import com.example.bankcards.exception.exceptions.UnauthorizedException;
 import com.example.bankcards.repository.UserRepository;
-import com.example.bankcards.security.AuthenticationService;
+import com.example.bankcards.security.impl.JwtServiceImpl;
+import com.example.bankcards.service.AuthenticationService;
 import com.example.bankcards.util.UserUtils;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
