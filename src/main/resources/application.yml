@@ -1,29 +1,28 @@
 #
 # application.yml — главный конфигурационный файл Spring Boot.
 
-#Что нужно сделать:
+# Что нужно сделать:
 #  - Указать настройки подключения к базе данных.
 #  - Указать порт приложения.
 #  - Настроить параметры безопасности и JWT.
 #  - Включить Swagger UI.
+
 server:
   port: 8080
 
 spring:
-  # Настройки подключения к БД PostgreSQL
+  #settings of postgres
   datasource:
     url: jdbc:postgresql://localhost:5432/bankcards
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
-
-  # Настройки Liquibase для миграций базы данных
+  #settings of liquibase
   liquibase:
     change-log: classpath:/db/migration/db.changelog-master.yaml
     enabled: true
     liquibase-schema: bankcards
-
-  # Настройки Hibernate и JPA
+  #settings of hibernate
   jpa:
     hibernate:
       ddl-auto: none
@@ -34,51 +33,20 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
 
-# Настройки логирования
 logging:
   level:
     org:
       springframework:
         security: DEBUG
 
-# Настройки безопасности и JWT
+#Security
 security:
   jwt:
     secret_key: 4eeab38d706831be4b36612ead768ef8182d1dd6f0e14e5dc934652e297fb16a
-    access_token_expiration: 36000000
-    refresh_token_expiration: 252000000
+    access_token_expiration: 36000000 # 10 hours
+    refresh_token_expiration: 252000000 # 7 days
 
-  # Настройки Spring Security
-  enabled: true
-  cors:
-    allowed-origins: "http://localhost:3000,http://localhost:8080"
-    allowed-methods: "GET,POST,PUT,DELETE,OPTIONS"
-    allowed-headers: "Authorization,Content-Type,X-Requested-With,Accept,Origin"
-    exposed-headers: "Authorization"
-    max-age: 3600
-    enabled: true
-    allow-credentials: true
-
-  # Настройки password encoder (BCrypt по умолчанию в Spring Security)
-  password-encoder:
-    strength: 10  # Костность BCrypt (4-31, по умолчанию 10)
-
-  # Настройки rate limiting (защита от brute force атак)
-  rate-limiting:
-    login:
-      attempts: 5
-      time-window: 300000  # 5 минут в миллисекундах
-      block-duration: 1800000  # 30 минут в миллисекундах
-
-  # Настройки сессии
-  session:
-    timeout: 3600  # Таймаут сессии в секундах
-    cookie:
-      secure: true
-      http-only: true
-      same-site: strict
-
-# Конфигурация Springdoc OpenAPI (Swagger)
+# Swagger configuration
 springdoc:
   api-docs:
     path: /api-docs
@@ -94,7 +62,7 @@ springdoc:
     doc-expansion: none
     display-operation-id: true
     display-request-duration: true
-    persist-authorization: true  # Сохранение авторизации между сессиями Swagger
+    persist-authorization: true
     oauth:
       client-id: swagger-ui
       client-secret: secret
