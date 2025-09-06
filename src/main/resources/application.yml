@@ -19,9 +19,8 @@ spring:
     driver-class-name: org.postgresql.Driver
   #settings of liquibase
   liquibase:
-    change-log: classpath:/db/migration/db.changelog-master.yaml
+    change-log: classpath:db/migration/db.changelog-master.yaml
     enabled: true
-    liquibase-schema: bankcards
   #settings of hibernate
   jpa:
     hibernate:
