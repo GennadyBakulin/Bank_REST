@@ -1,0 +1,1075 @@
+openapi: 3.0.1
+info:
+  title: Bank Cards Management API
+  description: API для системы управления банковскими картами
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Local server
+  - url: https://api.example.com
+    description: Production server
+tags:
+  - name: Transfer Management
+    description: API для управления переводами средств между картами
+  - name: User Management
+    description: API для управления пользователями системы
+  - name: Card Management
+    description: API для управления банковскими картами
+  - name: Authentication
+    description: API для аутентификации и регистрации пользователей
+paths:
+  /api/users:
+    post:
+      tags:
+        - User Management
+      summary: Получить пользователя по email
+      description: Администратор получает информацию о пользователе по email
+      operationId: getUserByEmail
+      requestBody:
+        description: Email пользователя
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserEmailDtoRequest'
+            example:
+              email: user@example.com
+        required: true
+      responses:
+        '200':
+          description: Пользователь успешно найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDtoResponse'
+              example:
+                email: user@example.com
+                name: John
+                lastName: Doe
+                role: USER
+        '403':
+          description: Доступ запрещен. Требуются права администратора
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDtoResponse'
+        '404':
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDtoResponse'
+    delete:
+      tags:
+        - User Management
+      summary: Удалить пользователя
+      description: Администратор удаляет пользователя по email
+      operationId: deleteUser
+      requestBody:
+        description: Email пользователя
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserEmailDtoRequest'
+            example:
+              email: user@example.com
+        required: true
+      responses:
+        '200':
+          description: Пользователь успешно удален
+          content:
+            text/plain:
+              example: The user has been successfully deleted
+        '403':
+          description: Доступ запрещен. Требуются права администратора
+          content:
+            application/json:
+              schema:
+                type: string
+        '404':
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                type: string
+  /api/transfers/my/between-cards:
+    post:
+      tags:
+        - Transfer Management
+      summary: Перевод между своими картами
+      description: Пользователь осуществляет перевод средств между своими картами
+      operationId: transferBetweenOwnCards
+      requestBody:
+        description: Данные для перевода
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferDtoRequest'
+            example:
+              from_card_number: '1234567812345678'
+              to_card_number: '8765432187654321'
+              amount: 1000
+        required: true
+      responses:
+        '201':
+          description: Перевод успешно выполнен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferDtoResponse'
+              example:
+                userEmail: user@example.com
+                fromCardNumber: '1234567812345678'
+                toCardNumber: '8765432187654321'
+                amount: 1000
+                time: '2024-01-15T14:30:00'
+        '400':
+          description: Невалидные данные запроса или недостаточно средств
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferDtoResponse'
+        '403':
+          description: Доступ запрещен. Карта не принадлежит пользователю
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferDtoResponse'
+        '404':
+          description: Карта не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferDtoResponse'
+  /api/cards/my:
+    post:
+      tags:
+        - Card Management
+      summary: Получить карту по номеру
+      description: Пользователь получает информацию о своей карте по номеру
+      operationId: getCardByNumber
+      requestBody:
+        description: Номер карты
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CardNumberDtoRequest'
+            example:
+              number: '1234567812345678'
+        required: true
+      responses:
+        '200':
+          description: Информация о карте успешно получена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardDtoResponse'
+              example:
+                maskedCardNumber: '**** **** **** 5678'
+                email: user@example.com
+                fullNameUser: John Doe
+                expirationDate: '2027-01-15'
+                status: ACTIVE
+                balance: 1000
+        '403':
+          description: Доступ запрещен. Требуется аутентификация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardDtoResponse'
+        '404':
+          description: Карта не найдена или не принадлежит пользователю
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardDtoResponse'
+  /api/cards/admin:
+    post:
+      tags:
+        - Card Management
+      summary: Создать новую карту (админ)
+      description: Администратор создает новую банковскую карту для пользователя
+      operationId: createCard
+      requestBody:
+        description: Данные для создания карты
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CardCreateDtoRequest'
+            example:
+              number: '1234567812345678'
+              user_email: user@example.com
+              count_month: 36
+              amount: 1000
+        required: true
+      responses:
+        '201':
+          description: Карта успешно создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardDtoResponse'
+              example:
+                maskedCardNumber: '**** **** **** 5678'
+                email: user@example.com
+                fullNameUser: John Doe
+                expirationDate: '2027-01-15'
+                status: ACTIVE
+                balance: 1000
+        '400':
+          description: Невалидные данные запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardDtoResponse'
+        '403':
+          description: Доступ запрещен. Требуются права администратора
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardDtoResponse'
+        '404':
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardDtoResponse'
+        '409':
+          description: Карта с таким номером уже существует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardDtoResponse'
+    delete:
+      tags:
+        - Card Management
+      summary: Удалить карту (админ)
+      description: Администратор удаляет карту по номеру
+      operationId: deleteCard
+      requestBody:
+        description: Номер карты для удаления
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CardNumberDtoRequest'
+            example:
+              number: '1234567812345678'
+        required: true
+      responses:
+        '200':
+          description: Карта успешно удалена
+        '403':
+          description: Доступ запрещен. Требуются права администратора
+        '404':
+          description: Карта не найдена
+  /api/auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Регистрация нового пользователя
+      description: Создание учетной записи нового пользователя в системе
+      operationId: register
+      requestBody:
+        description: Данные для регистрации
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationDtoRequest'
+            example:
+              email: user@example.com
+              name: John
+              last_name: Doe
+              password: Password123
+        required: true
+      responses:
+        '201':
+          description: Пользователь успешно зарегистрирован
+          content:
+            text/plain:
+              example: User registered successfully
+        '400':
+          description: Невалидные данные запроса
+          content:
+            application/json:
+              schema:
+                type: string
+        '409':
+          description: Пользователь с таким email уже существует
+          content:
+            application/json:
+              schema:
+                type: string
+  /api/auth/refresh-token:
+    post:
+      tags:
+        - Authentication
+      summary: Обновление JWT токена
+      description: Получение новой пары access и refresh токенов по старому refresh токену
+      operationId: refreshToken
+      responses:
+        '200':
+          description: Токены успешно обновлены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwtDtoResponse'
+        '401':
+          description: Невалидный или просроченный refresh токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwtDtoResponse'
+  /api/auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Выход из системы
+      description: Инвалидация JWT токенов и завершение сессии пользователя
+      operationId: logout
+      responses:
+        '200':
+          description: Успешный выход из системы
+          content:
+            text/plain:
+              example: Logged out successfully
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                type: string
+  /api/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Аутентификация пользователя
+      description: Вход в систему и получение JWT токенов
+      operationId: authenticate
+      requestBody:
+        description: Учетные данные пользователя
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthenticationDtoRequest'
+            example:
+              email: user@example.com
+              password: Password123
+        required: true
+      responses:
+        '200':
+          description: Успешная аутентификация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwtDtoResponse'
+              example:
+                accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                refreshToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        '401':
+          description: Неверные учетные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwtDtoResponse'
+        '404':
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwtDtoResponse'
+  /api/cards/my/request-block:
+    patch:
+      tags:
+        - Card Management
+      summary: Запрос на блокировку карты
+      description: Пользователь отправляет запрос на блокировку своей карты
+      operationId: requestCardBlock
+      requestBody:
+        description: Номер карты для блокировки
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CardNumberDtoRequest'
+            example:
+              number: '1234567812345678'
+        required: true
+      responses:
+        '200':
+          description: Запрос на блокировку карты успешно отправлен
+        '403':
+          description: Доступ запрещен. Требуется аутентификация
+        '404':
+          description: Карта не найдена или не принадлежит пользователю
+  /api/cards/admin/block:
+    patch:
+      tags:
+        - Card Management
+      summary: Заблокировать карту (админ)
+      description: Администратор блокирует карту по номеру
+      operationId: blockCard
+      requestBody:
+        description: Номер карты для блокировки
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CardNumberDtoRequest'
+            example:
+              number: '1234567812345678'
+        required: true
+      responses:
+        '200':
+          description: Карта успешно заблокирована
+        '403':
+          description: Доступ запрещен. Требуются права администратора
+        '404':
+          description: Карта не найдена
+  /api/cards/admin/activate:
+    patch:
+      tags:
+        - Card Management
+      summary: Активировать карту (админ)
+      description: Администратор активирует карту по номеру
+      operationId: activateCard
+      requestBody:
+        description: Номер карты для активации
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CardNumberDtoRequest'
+            example:
+              number: '1234567812345678'
+        required: true
+      responses:
+        '200':
+          description: Карта успешно активирована
+        '400':
+          description: Нельзя активировать карту с истекшим сроком
+        '403':
+          description: Доступ запрещен. Требуются права администратора
+        '404':
+          description: Карта не найдена
+  /api/users/all:
+    get:
+      tags:
+        - User Management
+      summary: Получить всех пользователей
+      description: Администратор получает список всех пользователей с пагинацией
+      operationId: getAllUsers
+      parameters:
+        - name: page
+          in: query
+          description: Номер страницы (начиная с 0)
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+          example: 0
+        - name: size
+          in: query
+          description: Размер страницы
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 10
+          example: 10
+      responses:
+        '200':
+          description: Список пользователей успешно получен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageDtoResponse'
+              example:
+                content:
+                  - email: user1@example.com
+                    name: John
+                    lastName: Doe
+                    role: USER
+                  - email: admin@example.com
+                    name: Jane
+                    lastName: Smith
+                    role: ADMIN
+                totalElements: 2
+                totalPages: 1
+                currentPage: 0
+        '403':
+          description: Доступ запрещен. Требуются права администратора
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageDtoResponseUserDtoResponse'
+  /api/transfers/my:
+    get:
+      tags:
+        - Transfer Management
+      summary: Получить мои переводы
+      description: Пользователь получает список своих переводов с пагинацией
+      operationId: getMyTransfers
+      parameters:
+        - name: page
+          in: query
+          description: Номер страницы (начиная с 0)
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+          example: 0
+        - name: size
+          in: query
+          description: Размер страницы
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 10
+          example: 10
+      responses:
+        '200':
+          description: Список переводов пользователя успешно получен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageDtoResponse'
+              example:
+                content:
+                  - userEmail: user@example.com
+                    fromCardNumber: '1234567812345678'
+                    toCardNumber: '8765432187654321'
+                    amount: 1000
+                    time: '2024-01-15T14:30:00'
+                  - userEmail: user@example.com
+                    fromCardNumber: '1234567812345678'
+                    toCardNumber: '9999888877776666'
+                    amount: 250.75
+                    time: '2024-01-14T10:15:00'
+                totalElements: 2
+                totalPages: 1
+                currentPage: 0
+        '403':
+          description: Доступ запрещен. Требуется аутентификация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageDtoResponseTransferDtoResponse'
+  /api/transfers/all:
+    get:
+      tags:
+        - Transfer Management
+      summary: Получить все переводы (админ)
+      description: Администратор получает список всех переводов в системе с пагинацией
+      operationId: getAllTransfers
+      parameters:
+        - name: page
+          in: query
+          description: Номер страницы (начиная с 0)
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+          example: 0
+        - name: size
+          in: query
+          description: Размер страницы
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 10
+          example: 10
+      responses:
+        '200':
+          description: Список переводов успешно получен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageDtoResponse'
+              example:
+                content:
+                  - userEmail: user1@example.com
+                    fromCardNumber: '1234567812345678'
+                    toCardNumber: '8765432187654321'
+                    amount: 1000
+                    time: '2024-01-15T14:30:00'
+                  - userEmail: user2@example.com
+                    fromCardNumber: '1111222233334444'
+                    toCardNumber: '5555666677778888'
+                    amount: 500.5
+                    time: '2024-01-15T15:45:00'
+                totalElements: 2
+                totalPages: 1
+                currentPage: 0
+        '403':
+          description: Доступ запрещен. Требуются права администратора
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageDtoResponseTransferDtoResponse'
+  /api/cards/my/total-balance:
+    get:
+      tags:
+        - Card Management
+      summary: Получить общий баланс
+      description: Пользователь получает общий баланс со всех своих активных карт
+      operationId: getTotalBalance
+      responses:
+        '200':
+          description: Общий баланс успешно получен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TotalBalanceDtoResponse'
+              example:
+                email: user@example.com
+                totalBalance: 1500.5
+        '403':
+          description: Доступ запрещен. Требуется аутентификация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TotalBalanceDtoResponse'
+  /api/cards/my/all:
+    get:
+      tags:
+        - Card Management
+      summary: Получить мои карты
+      description: Пользователь получает список всех своих карт с пагинацией
+      operationId: getMyCards
+      parameters:
+        - name: page
+          in: query
+          description: Номер страницы (начиная с 0)
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+          example: 0
+        - name: size
+          in: query
+          description: Размер страницы
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 10
+          example: 10
+      responses:
+        '200':
+          description: Список карт пользователя успешно получен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageDtoResponse'
+              example:
+                content:
+                  - maskedCardNumber: '**** **** **** 5678'
+                    email: user1@example.com
+                    fullNameUser: John Doe
+                    expirationDate: '2027-01-15'
+                    status: ACTIVE
+                    balance: 1000
+                  - maskedCardNumber: '**** **** **** 4321'
+                    email: user2@example.com
+                    fullNameUser: Jane Smith
+                    expirationDate: '2026-05-20'
+                    status: BLOCKED
+                    balance: 500.5
+                totalElements: 2
+                totalPages: 1
+                currentPage: 0
+        '403':
+          description: Доступ запрещен. Требуется аутентификация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageDtoResponseCardDtoResponse'
+  /api/cards/admin/all:
+    get:
+      tags:
+        - Card Management
+      summary: Получить все карты (админ)
+      description: Администратор получает список всех карт в системе с пагинацией
+      operationId: getAllCards
+      parameters:
+        - name: page
+          in: query
+          description: Номер страницы (начиная с 0)
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+          example: 0
+        - name: size
+          in: query
+          description: Размер страницы
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 10
+          example: 10
+      responses:
+        '200':
+          description: Список карт успешно получен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageDtoResponse'
+              example:
+                content:
+                  - maskedCardNumber: '**** **** **** 5678'
+                    email: user1@example.com
+                    fullNameUser: John Doe
+                    expirationDate: '2027-01-15'
+                    status: ACTIVE
+                    balance: 1000
+                  - maskedCardNumber: '**** **** **** 4321'
+                    email: user2@example.com
+                    fullNameUser: Jane Smith
+                    expirationDate: '2026-05-20'
+                    status: BLOCKED
+                    balance: 500.5
+                totalElements: 2
+                totalPages: 1
+                currentPage: 0
+        '403':
+          description: Доступ запрещен. Требуются права администратора
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageDtoResponseCardDtoResponse'
+components:
+  schemas:
+    UserEmailDtoRequest:
+      required:
+        - email
+      type: object
+      properties:
+        email:
+          type: string
+          description: Email пользователя
+          example: user@example.com
+      description: Запрос с email пользователя
+    UserDtoResponse:
+      type: object
+      properties:
+        email:
+          type: string
+          description: Email пользователя
+          example: user@example.com
+        name:
+          type: string
+          description: Имя пользователя
+          example: John
+        lastName:
+          type: string
+          description: Фамилия пользователя
+          example: Doe
+        role:
+          type: string
+          description: Роль пользователя в системе
+          example: USER
+          enum:
+            - USER
+            - ADMIN
+      description: Ответ с информацией о пользователе
+    TransferDtoRequest:
+      required:
+        - amount
+        - from_card_number
+        - to_card_number
+      type: object
+      properties:
+        amount:
+          minimum: 0.01
+          exclusiveMinimum: false
+          type: number
+          description: Сумма перевода
+          example: 1000
+        from_card_number:
+          maxLength: 16
+          minLength: 16
+          type: string
+          description: Номер карты с которой произойдет перевод средств
+          example: '1234567812345678'
+        to_card_number:
+          maxLength: 16
+          minLength: 16
+          type: string
+          description: Номер карты на которую переводятся средства
+          example: '8765432187654321'
+      description: Запрос на перевод средств между картами
+    TransferDtoResponse:
+      type: object
+      properties:
+        userEmail:
+          type: string
+          description: Email пользователя, выполнившего перевод
+          example: user@example.com
+        fromCardNumber:
+          type: string
+          description: Номер карты с которой произведен перевод средств
+          example: '1234567812345678'
+        toCardNumber:
+          type: string
+          description: Номер карты на которую произведен перевод средств
+          example: '1234567812345678'
+        amount:
+          type: number
+          description: Сумма перевода
+          example: 1000
+        time:
+          type: string
+          description: Время выполнения перевода
+          format: date-time
+      description: Ответ с информацией о переводе
+    CardNumberDtoRequest:
+      required:
+        - card_number
+      type: object
+      properties:
+        card_number:
+          maxLength: 16
+          minLength: 16
+          type: string
+          description: Номер карты
+          example: '1234567812345678'
+      description: Запрос с номером карты
+    CardDtoResponse:
+      type: object
+      properties:
+        maskedCardNumber:
+          type: string
+          description: Замаскированный номер карты
+          example: '**** **** **** 5678'
+        email:
+          type: string
+          description: Email владельца карты
+          example: user@example.com
+        fullNameUser:
+          type: string
+          description: Полное имя владельца карты
+          example: John Doe
+        expirationDate:
+          type: string
+          description: Дата окончания действия карты
+          format: date
+          example: '2027-01-15'
+        status:
+          type: string
+          description: Статус карты
+          example: ACTIVE
+          enum:
+            - ACTIVE
+            - BLOCKED
+            - EXPIRED
+        balance:
+          type: number
+          description: Баланс карты
+          example: 1000
+      description: Ответ с информацией о карте
+    CardCreateDtoRequest:
+      required:
+        - number
+        - user_email
+      type: object
+      properties:
+        number:
+          maxLength: 16
+          minLength: 16
+          type: string
+          description: Номер карты
+          example: '1234567812345678'
+        amount:
+          minimum: 0
+          exclusiveMinimum: false
+          type: number
+          description: Начальный баланс карты
+          example: 1000
+        user_email:
+          type: string
+          description: Email пользователя-владельца карты
+          example: user@example.com
+        count_month:
+          minimum: 1
+          type: integer
+          description: Срок действия карты в месяцах
+          format: int32
+          example: 36
+      description: Запрос на создание новой карты
+    RegistrationDtoRequest:
+      required:
+        - email
+        - last_name
+        - name
+        - password
+      type: object
+      properties:
+        email:
+          type: string
+          description: Email пользователя
+          example: user@example.com
+        name:
+          maxLength: 125
+          minLength: 1
+          type: string
+          description: Имя пользователя
+          example: John
+        password:
+          maxLength: 16
+          minLength: 5
+          type: string
+          description: Пароль пользователя
+          example: SecurePassword123!
+        last_name:
+          maxLength: 125
+          minLength: 1
+          type: string
+          description: Фамилия пользователя
+          example: Doe
+      description: Запрос на регистрацию пользователя
+    JwtDtoResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: Access token для авторизации
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        refreshToken:
+          type: string
+          description: Refresh token для обновления access token
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      description: Ответ с JWT токенами
+    AuthenticationDtoRequest:
+      required:
+        - email
+        - password
+      type: object
+      properties:
+        email:
+          type: string
+          description: Email пользователя
+          example: user@example.com
+        password:
+          type: string
+          description: Пароль пользователя
+          example: SecurePassword123!
+      description: Запрос на аутентификацию пользователя
+    PageDtoResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          description: Содержимое страницы
+          items:
+            type: object
+            description: Содержимое страницы
+        totalElements:
+          type: integer
+          description: Общее количество элементов
+          format: int64
+          example: 100
+        totalPages:
+          type: integer
+          description: Общее количество страниц
+          format: int32
+          example: 10
+        number:
+          type: integer
+          description: Текущий номер страницы
+          format: int32
+          example: 0
+      description: Ответ с пагинированным списком
+    PageDtoResponseUserDtoResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          description: Содержимое страницы
+          items:
+            $ref: '#/components/schemas/UserDtoResponse'
+        totalElements:
+          type: integer
+          description: Общее количество элементов
+          format: int64
+          example: 100
+        totalPages:
+          type: integer
+          description: Общее количество страниц
+          format: int32
+          example: 10
+        number:
+          type: integer
+          description: Текущий номер страницы
+          format: int32
+          example: 0
+      description: Ответ с пагинированным списком
+    PageDtoResponseTransferDtoResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          description: Содержимое страницы
+          items:
+            $ref: '#/components/schemas/TransferDtoResponse'
+        totalElements:
+          type: integer
+          description: Общее количество элементов
+          format: int64
+          example: 100
+        totalPages:
+          type: integer
+          description: Общее количество страниц
+          format: int32
+          example: 10
+        number:
+          type: integer
+          description: Текущий номер страницы
+          format: int32
+          example: 0
+      description: Ответ с пагинированным списком
+    TotalBalanceDtoResponse:
+      type: object
+      properties:
+        email:
+          type: string
+          description: Email пользователя
+          example: user@example.com
+        totalBalance:
+          type: number
+          description: Общий баланс по всем активным картам
+          example: 1500.5
+      description: Ответ с общим балансом пользователя
+    PageDtoResponseCardDtoResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          description: Содержимое страницы
+          items:
+            $ref: '#/components/schemas/CardDtoResponse'
+        totalElements:
+          type: integer
+          description: Общее количество элементов
+          format: int64
+          example: 100
+        totalPages:
+          type: integer
+          description: Общее количество страниц
+          format: int32
+          example: 10
+        number:
+          type: integer
+          description: Текущий номер страницы
+          format: int32
+          example: 0
+      description: Ответ с пагинированным списком
+  securitySchemes:
+    Bearer Authentication:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
