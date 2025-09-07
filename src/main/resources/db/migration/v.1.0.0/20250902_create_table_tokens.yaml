@@ -1,0 +1,43 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20250902_create_table_tokens
+      author: gennady bakulin
+      changes:
+        - createTable:
+            tableName: tokens
+            remarks: Таблица токенов пользователей
+            columns:
+              - column:
+                  name: id
+                  type: serial
+                  remarks: Id
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: id_pk
+              - column:
+                  name: user_email
+                  type: varchar(255)
+                  remarks: Email владельца токена
+                  constraints:
+                    nullable: false
+                    referencedTableName: users
+                    referencedColumnNames: email
+                    foreignKeyName: user_email_fk
+              - column:
+                  name: access_token
+                  type: varchar(255)
+                  remarks: Токен доступа
+                  constraints:
+                    nullable: false
+              - column:
+                  name: refresh_token
+                  type: varchar(255)
+                  remarks: Токен обновления
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_logged_out
+                  type: boolean
+                  remarks: Отметка о выходе пользователя из системы
+                  constraints:
+                    nullable: false

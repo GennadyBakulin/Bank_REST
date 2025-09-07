@@ -1,8 +1,8 @@
 databaseChangeLog:
   - include:
-      file: 20250901_init_schema.xml
+      file: 20250901_init_schema.yaml
       relativeToChangelogFile: true
   - include:
-      file: 20250902_create_table_tokens.xml
+      file: 20250902_create_table_tokens.yaml
       relativeToChangelogFile: true
 

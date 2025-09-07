@@ -1,0 +1,136 @@
+databaseChangeLog:
+    - changeSet:
+          id: 20250901_init_schema
+          author: gennady bakulin
+          changes:
+              - createTable:
+                    tableName: users
+                    remarks: Таблица пользователь
+                    columns:
+                        - column:
+                              name: email
+                              type: varchar(255)
+                              remarks: Email пользователя
+                              constraints:
+                                  primaryKey: true
+                                  primaryKeyName: email_pk
+                        - column:
+                              name: name
+                              type: varchar(125)
+                              remarks: Имя пользователя
+                              constraints:
+                                  nullable: false
+                        - column:
+                              name: last_name
+                              type: varchar(125)
+                              remarks: Фамилия пользователя
+                              constraints:
+                                  nullable: false
+                        - column:
+                              name: role
+                              type: varchar(10)
+                              remarks: Роль в системе банка
+                              constraints:
+                                  nullable: false
+                        - column:
+                              name: password
+                              type: varchar(255)
+                              remarks: Пароль пользователя
+                              constraints:
+                                  nullable: false
+
+              - createTable:
+                    tableName: cards
+                    remarks: Таблица банковских карт
+                    columns:
+                        - column:
+                              name: number
+                              type: varchar(16)
+                              remarks: Номер карты
+                              constraints:
+                                  primaryKey: true
+                                  primaryKeyName: card_number_pk
+                        - column:
+                              name: user_email
+                              type: varchar(255)
+                              remarks: Email владельца карты
+                              constraints:
+                                  nullable: false
+                                  referencedTableName: users
+                                  referencedColumnNames: email
+                                  foreignKeyName: user_email_fk
+                        - column:
+                              name: full_name_user
+                              type: varchar(255)
+                              remarks: Полное имя владельца карты
+                              constraints:
+                                  nullable: false
+                        - column:
+                              name: expiration_date
+                              type: timestamp
+                              remarks: Срок окончания действия карты
+                              constraints:
+                                  nullable: false
+                        - column:
+                              name: status
+                              type: varchar(10)
+                              remarks: Статус карты (Активна, Заблокирована, Истек срок)
+                              constraints:
+                                  nullable: false
+                        - column:
+                              name: balance
+                              type: numeric(12,2)
+                              remarks: Баланс карты
+                              constraints:
+                                  nullable: false
+                        - column:
+                              name: request_to_blocked
+                              type: boolean
+                              remarks: Отметка о запросе на блокировку карты
+                              constraints:
+                                  nullable: true
+
+              - createTable:
+                    tableName: transfers
+                    remarks: Таблица переводов по картам
+                    columns:
+                        - column:
+                              name: id
+                              type: serial
+                              remarks: Уникальный идентификатор перевода
+                              constraints:
+                                  primaryKey: true
+                                  primaryKeyName: transfers_id_pk
+                        - column:
+                              name: user_email
+                              type: varchar(255)
+                              remarks: Владелец карты
+                              constraints:
+                                  nullable: false
+                                  referencedTableName: users
+                                  referencedColumnNames: email
+                                  foreignKeyName: user_email_fk
+                        - column:
+                              name: from_card_number
+                              type: varchar(16)
+                              remarks: Номер карты с которой совершили перевод
+                              constraints:
+                                  nullable: false
+                        - column:
+                              name: to_card_number
+                              type: varchar(16)
+                              remarks: Номер карты на которую совершили перевод
+                              constraints:
+                                  nullable: false
+                        - column:
+                              name: amount
+                              type: numeric(12,2)
+                              remarks: Сумма перевода
+                              constraints:
+                                  nullable: false
+                        - column:
+                              name: time
+                              type: timestamp
+                              remarks: Дата и время перевода
+                              constraints:
+                                  nullable: false
